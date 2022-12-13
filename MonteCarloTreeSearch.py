@@ -9,12 +9,13 @@ inspiared by: https://webdocs.cs.ualberta.ca/~hayward/396/jem/mcts.html
 import copy
 import numpy as np
 import numba
+import Connect4Game
 
 class Tree:
     def __init__(self):
         self.nodes = {}
     
-    def new_node(self,state_hash, available_actions,next_row_height):
+    def new_node(self,state_hash, available_actions,next_row_height,priors,prior_win_prediction):
         new_node = {'no_visits':                0,
                     'actions':                  available_actions,
                     'actions_idx':              {action:idx for idx, action in enumerate(available_actions)},
@@ -24,6 +25,8 @@ class Tree:
                     'amaf_q_values':            np.zeros(len(available_actions)),
                     'amaf_no_visits_actions':   np.zeros(len(available_actions),dtype=np.int64),
                     'next_state_hash':          np.zeros(len(available_actions),dtype=np.int64),
+                    'priors':                   priors,
+                    'prior_win_prediction':     prior_win_prediction,
                     }
                              
         self.nodes[state_hash] = new_node
@@ -39,7 +42,7 @@ class Tree:
     def get_node(self, state_hash):
         return self.nodes[state_hash]
     
-    def update_node(self, state_hash, action, reward, following_actions, following_row_heights):
+    def update_node(self, state_hash, action, reward, following_actions, following_row_heights, use_rave = True):
         node = self.nodes[state_hash]
         
         action_idx = node['actions_idx'][action]
@@ -49,15 +52,19 @@ class Tree:
         node['q_values'][action_idx] += (reward - node['q_values'][action_idx]) / node['no_visits_actions'][action_idx]
     
         #update amaf
-        for node_action in node['actions']:
-            first_following_action_idx = np.where(following_actions==node_action)[0]
-            if len(first_following_action_idx)>0:
-                first_following_action_idx = first_following_action_idx[0]
-                f_row_height = following_row_heights[first_following_action_idx]
-                action_idx = node['actions_idx'][node_action]
-                if f_row_height == node['next_row_height'][action_idx]:
-                    node['amaf_no_visits_actions'][action_idx] += 1
-                    node['amaf_q_values'][action_idx] += (reward - node['amaf_q_values'][action_idx]) / node['amaf_no_visits_actions'][action_idx]
+        if use_rave:
+            for node_action in node['actions']:
+                if len(following_actions)==0 or node_action == action:
+                    break
+                
+                first_following_action_idx = find_first_in_array(np.array(following_actions), node_action)
+                
+                if first_following_action_idx>=0:
+                    f_row_height = following_row_heights[first_following_action_idx]
+                    action_idx = node['actions_idx'][node_action]
+                    if f_row_height == node['next_row_height'][action_idx]:
+                        node['amaf_no_visits_actions'][action_idx] += 1
+                        node['amaf_q_values'][action_idx] += (reward - node['amaf_q_values'][action_idx]) / node['amaf_no_visits_actions'][action_idx]
                 
         
     
@@ -66,11 +73,17 @@ class Tree:
         prev_action_idx = prev_node['actions_idx'][prev_action]
         prev_node['next_state_hash'][prev_action_idx] = current_state_hash
         
-    
+@numba.njit
+def find_first_in_array(array,element):
+    first_following_action_idx = np.where(array==element)[0]
+    if len(first_following_action_idx)>0:
+        return first_following_action_idx[0]
+    else:
+        return -1
 
-def check_game_over(game, action, row, player):
-    game_won = game.check_four_in_a_row(col = action, row = row, player = player)
-    last_player = player
+
+def check_game_over(game, player):
+    game_won = player == game.winner
     if game_won:
         terminal_bool = True
         last_player_reward = 1
@@ -83,7 +96,7 @@ def check_game_over(game, action, row, player):
             terminal_bool = False
             last_player_reward = 0
     
-    return terminal_bool, last_player, last_player_reward
+    return terminal_bool, player, last_player_reward
 
 def select_node_action_ucb1(node, confidence_value, rave_param, max_bool = True):    
     if rave_param is None:
@@ -135,6 +148,15 @@ def get_optimal_action_and_next_state_hash(node,max_bool):
     next_state_hash = node['next_state_hash'][best_action_idx]
     return best_action, q_value,amaf_q_value, next_state_hash
 
+def get_action_probabilities(game, tree,temperature=1):
+    start_state_hash = hash(game.Board.tobytes())
+    current_node = tree.get_node(start_state_hash)
+    no_visits = np.zeros(game.no_cols)
+    no_visits[current_node['actions']] = current_node['no_visits_actions']
+    no_visits_temperature = no_visits**(1/temperature)
+    return no_visits_temperature/sum(no_visits_temperature)
+    
+
 def get_optimal_tree_actions(game, tree, player, next_player):
     start_state_hash = hash(game.Board.tobytes())
     current_node = tree.get_node(start_state_hash)
@@ -162,17 +184,23 @@ def get_optimal_tree_actions(game, tree, player, next_player):
         current_node = tree.get_node(next_state_hash)
         
 
-def MonteCarloTreeSearch(game, player, next_player, max_count, max_depth, confidence_value, rave_param, rollout_player, tree = None):
+def MonteCarloTreeSearch(game, player, next_player, max_count, max_depth, confidence_value, rave_param, rollout_player, tree = None, evaluator = None):
     if tree is None:
         tree = Tree()
+        
+    if evaluator is None:
+        no_cols = game.Board.shape[1]
+        evaluator = lambda board: (np.zeros(no_cols)+1/no_cols,0.5)
+
+    use_rave = rave_param != None
 
     counter = 0
     
     players = [player, next_player]
-    game_copy = copy.deepcopy(game)
+    game_copy = Connect4Game.Connect4(game)
     
     while counter < max_count:
-        game_copy.reset(game.Board)
+        game_copy.reset(game)
         visited_state_hashes = []
         no_visited_states = len(visited_state_hashes)
         actions = []
@@ -191,8 +219,9 @@ def MonteCarloTreeSearch(game, player, next_player, max_count, max_depth, confid
             ##expansion and stop selection
             if not tree.is_node_in_tree(current_state_hash):
                 clever_available_actions = game_copy.get_clever_available_actions(players[player_turn],players[next_player_turn])
+                priors, win_prediction = evaluator(game_copy.Board)
                 next_row_heights = game_copy.next_row_height[clever_available_actions]
-                tree.new_node(current_state_hash,clever_available_actions,next_row_heights)
+                tree.new_node(current_state_hash,clever_available_actions,next_row_heights, priors, win_prediction)
                 if no_visited_states > 1:
                     tree.update_next_state_hash(visited_state_hashes[-2],actions[-1],current_state_hash)
                 break
@@ -206,12 +235,12 @@ def MonteCarloTreeSearch(game, player, next_player, max_count, max_depth, confid
             current_node = tree.get_node(current_state_hash)
             selected_action = select_node_action_ucb1(current_node, confidence_value, rave_param, max_bool = players[player_turn] == player)
             actions.append(selected_action)
+            new_row_heights.append(game.next_row_height[selected_action])
             
             #perform action
-            new_row_height = game_copy.place_disc(selected_action, players[player_turn])  
-            new_row_heights.append(new_row_height)
+            game_copy.place_disc(selected_action, players[player_turn])  
             #check if game is over
-            terminal_bool, last_player, last_player_reward = check_game_over(game_copy, selected_action, new_row_height, players[player_turn])
+            terminal_bool, last_player, last_player_reward = check_game_over(game_copy, players[player_turn])
             #update player turn
             player_turn = next_player_turn
             
@@ -223,10 +252,11 @@ def MonteCarloTreeSearch(game, player, next_player, max_count, max_depth, confid
             #get and simulate action
             sim_action = rollout_player.make_action(game_copy.Board, clever_available_actions)
             actions.append(sim_action)
-            new_row_height = game_copy.place_disc(sim_action, players[player_turn])
-            new_row_heights.append(new_row_height)
+            new_row_heights.append(game.next_row_height[sim_action])
+            game_copy.place_disc(sim_action, players[player_turn])
+            
             #check if game is over
-            terminal_bool, last_player, last_player_reward = check_game_over(game_copy, sim_action, new_row_height, players[player_turn])
+            terminal_bool, last_player, last_player_reward = check_game_over(game_copy, players[player_turn])
             #update player turn
             player_turn = next_player_turn
         
@@ -242,7 +272,8 @@ def MonteCarloTreeSearch(game, player, next_player, max_count, max_depth, confid
                              actions[idx],
                              player_reward,
                              following_actions=actions[idx+2::2],
-                             following_row_heights=new_row_heights[idx+2::2])   
+                             following_row_heights=new_row_heights[idx+2::2],
+                             use_rave=use_rave)   
         
         counter +=1
     

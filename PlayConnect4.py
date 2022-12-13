@@ -71,10 +71,10 @@ def create_player(difficulty,player):
         player = Connect4Players.MCTSPlayer(game = game, 
                                             player = player, 
                                             next_player = player*-1, 
-                                            max_count = 5e3,
+                                            max_count = 1e4,
                                             max_depth = 100, 
                                             confidence_value = 2**0,
-                                            rave_param=2**-1) 
+                                            rave_param=None) #2**-1
         print("You are a dead man... Let's go!")
     else:
         raise
@@ -155,7 +155,7 @@ def GameHandler(game, ai_player, human_start_wish, human_color_wish, debug_mode)
             action = get_human_action(available_actions)
         else:
             clever_available_actions = game.get_clever_available_actions(player_value, next_player_value)
-            action = ai_player.make_action(game.Board, clever_available_actions)
+            action = ai_player.make_action(game, clever_available_actions)
             print('I will play column',action+1)
             if hasattr(ai_player, 'winning_probability'):
                 print('I estimate that my probability of winning is: ',str(round(ai_player.winning_probability,4)*100)+'%')
@@ -168,11 +168,10 @@ def GameHandler(game, ai_player, human_start_wish, human_color_wish, debug_mode)
                         print('Number of visits '+str(idx)+':',node['no_visits_actions'])
         
         #perform action and plot game
-        new_row_height = game.place_disc(action, player_value)
+        game_over = game.place_disc(action, player_value)
         game.plot_board_state(update = True)
         
         #Check if game is over
-        game_over = game.check_four_in_a_row(action, new_row_height, player_value)
         if game_over:
             if player_turn != human_start_wish:
                 print("YOU SUCK! I knew it...")

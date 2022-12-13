@@ -30,6 +30,7 @@ class Connect4GameHandler:
         self.actions = []
         self.states = [self.game.Board]
         self.player_turns = []
+        self.action_probabilities = []
         self.winner = 0
         for player in self.players:
             player.reset()
@@ -58,30 +59,33 @@ class Connect4GameHandler:
             self.player_turns.append(current_player_value)
             
             #get board state
-            board_state, flipped_bool = self.adjust_board_state(self.game.Board, player_turn, flip)
+            #board_state, flipped_bool = self.adjust_board_state(self.game.Board, player_turn, flip)
             
             #get available (clever) actions
-            clever_available_actions = self.adjust_action(self.game.get_clever_available_actions(current_player_value,next_player_value),flipped_bool)
-            
+            #clever_available_actions = self.adjust_action(self.game.get_clever_available_actions(current_player_value,next_player_value),flipped_bool)
+            clever_available_actions = self.game.get_clever_available_actions(current_player_value,next_player_value)
             #get new action
-            new_action = self.players[player_turn].make_action(board_state, clever_available_actions)
-
-            if new_action not in clever_available_actions:
-                print('ERROR')
-                new_action = self.players[player_turn].make_action(board_state, clever_available_actions)
+            new_action = self.players[player_turn].make_action(self.game, clever_available_actions)
+            
+            #save action probabilities (only if new_action is tuple)
+            if type(new_action) is tuple:
+                self.action_probabilities.append(new_action[1])
+                new_action = new_action[0]
+            else:
+                self.action_probabilities.append(None)
             
             #adjust and save action
-            new_action = self.adjust_action(new_action, flipped_bool)
+            #new_action = self.adjust_action(new_action, flipped_bool)
             self.actions.append(new_action)
-            
+
             #perform new action and save state
-            new_row_height = self.game.place_disc(new_action,current_player_value)
+            is_game_won = self.game.place_disc(new_action,current_player_value)
             self.states.append(copy.deepcopy(self.game.Board))
             
             #check if game is done
-            is_game_won = self.game.check_four_in_a_row(new_action,new_row_height,current_player_value)
+            #is_game_won = self.game.check_four_in_a_row(new_action,new_row_height,current_player_value)
             if is_game_won:
-                self.winner = current_player_value
+                self.winner = self.game.winner
                 break
 
             #update player turn
@@ -101,33 +105,11 @@ class Connect4GameHandler:
             if plot:
                 self.game.plot_board_state()
         return winners
-    
-
-    def step(self, action=None, player_turn = None): #### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        if self.winner != 0:
-            #game over
-            self.reset_game()
-
-        if player_turn is None:
-            self.step(action = action, player_turn=0) #always start playing as the first player
-            #### check for win!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            return self.step(action = action, player_turn=1)
+       
         
-        if action is None:
-            new_action = self.players[player_turn].make_action(self.game.Board, self.game.get_available_actions())
-        else:
-            new_action = action
-            
-        new_row_height = self.game.place_disc(new_action,self.player_values[player_turn])
-        is_game_won = self.game.check_four_in_a_row(new_action,new_row_height,self.player_values[player_turn])
-        if is_game_won:
-                self.winner = self.player_values[player_turn]
+    def save_data(self):
+        pass
         
-        if self.save_info:
-            self.actions.append(new_action)
-            self.player_turns.append(self.player_values[player_turn])
-            self.states.append(copy.deepcopy(self.game.Board))
-            
 @numba.njit
 def adjust_board_state_numba(board_state, player_value,no_cols, flip):
     board_state = board_state * player_value # adjust board so player is always 1 and opponent -1

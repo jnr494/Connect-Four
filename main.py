@@ -10,6 +10,7 @@ import Connect4Game as C4Game
 import Connect4Players as C4Players
 import Connect4GameHandler as C4GameHandler
 import DeepQModel
+import time
 
 def create_training_data(Handler,no_games=1,possible_rewards=[1,-1]):
     player_focus = 1 #player0 has player_value=1 and is red
@@ -149,45 +150,50 @@ def main2():
     player = 1
     next_player = -1
     confidence_value = 1
-    max_count = 1e3
+    max_count = 5e3
     max_depth = 100
     
-    rave0 = 2**-1
-    rave1 = 2**-1
+    rave0 = None
+    rave1 = None
     cv0 = 2**0
     cv1 = 2**0
-    tree0 = False
+    tree0 = True
     tree1 = True
     
-    np.random.seed(None)
-    print('Seed',np.random.get_state()) 
+    seed = int(time.time())
+    np.random.seed(seed)
+    print('Seed',seed) 
     
-    print('1 - rave:',rave0,'cv',cv0,'tree',tree0)
-    print('-1 - rave:',rave1,'cv',cv1,'tree',tree1)
+    print('1 - rave:',rave0,'cv:',cv0,'tree:',tree0)
+    print('-1 - rave:',rave1,'cv:',cv1,'tree:',tree1)
     
     MCTSPlayer0 = C4Players.MCTSPlayer(game,
-                                       player, 
-                                       next_player, 
+                                       player = 1, 
+                                       next_player = -1, 
                                        max_count = max_count, 
                                        max_depth = max_depth, 
                                        confidence_value = cv0,
                                        rave_param=rave0,
-                                       reuse_tree=tree0)
+                                       reuse_tree=tree0,
+                                       randomize_action = False,)
     MCTSPlayer1 = C4Players.MCTSPlayer(game, 
-                                       player, 
-                                       next_player, 
+                                       player = -1, 
+                                       next_player = 1, 
                                        max_count = max_count, 
                                        max_depth = max_depth, 
                                        confidence_value = cv1,
                                        rave_param=rave1,
-                                       reuse_tree=tree1)
+                                       reuse_tree=tree1,
+                                       randomize_action = False,)
    
     Handler = C4GameHandler.Connect4GameHandler(game, MCTSPlayer0, MCTSPlayer1)
     
     #Handler.play_game(0, True)
     #game.plot_board_state()
     
-    winners = Handler.play_n_games(10,False,flip=False)
+    winners = Handler.play_n_games(10,True,flip=False)
+    seed += 1
+    np.random.seed(seed)
     print(winners)
     print(np.average(winners))
     

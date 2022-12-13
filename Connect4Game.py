@@ -11,14 +11,13 @@ import numba
 import copy
 
 class Connect4():
-    def __init__(self):
+    def __init__(self, game = None):
         self.no_rows = 6
         self.no_cols = 7
         self.blank_value = 0
         
         self.fig = None
-        
-        self.reset()
+        self.reset(game)
         
     def place_disc(self, col, player):
         #place disc
@@ -26,52 +25,48 @@ class Connect4():
         self.Board[row,col] = player
         #update next_row_height
         self.next_row_height[col] += 1
-        return row
+        
+        #check for win
+        if self.current_winning_possibilities[player][row,col] == 1:
+            self.winner = player
+            return True
+        else:
+            #update current winning_possibilities
+            update_winning_possibilities(self.Board,self.current_winning_possibilities[player],player,col,row)
+            return False
     
     
-    def reset(self, board = None):
-        if board is None:
+    def reset(self, game = None):
+        if game is None:
             self.Board = np.zeros((self.no_rows,self.no_cols))
             self.next_row_height = np.zeros((self.no_cols,),dtype=int)
+            self.current_winning_possibilities = {1:np.zeros((self.no_rows,self.no_cols)),-1:np.zeros((self.no_rows,self.no_cols))}
+            self.winner = None
         else:
-            self.Board = copy.deepcopy(board)
-            self.next_row_height = np.append((self.Board==self.blank_value),np.ones((1,self.no_cols)),axis=0).argmax(axis=0)
+            self.Board = copy.deepcopy(game.Board)
+            self.next_row_height = copy.deepcopy(game.next_row_height)
+            self.current_winning_possibilities = copy.deepcopy(game.current_winning_possibilities)
+            self.winner = game.winner
             
     
     def get_available_actions(self):
-        board_top_row = self.Board[-1,:]
-        available_actions = np.where(board_top_row==0)[0]
-        return available_actions
+        return get_available_actions_numba(self.Board)
     
     def get_clever_available_actions(self, player, next_player):
-        winning_actions = self.get_winning_actions(player = player)
+        winning_actions =find_available_winning_actions(self.current_winning_possibilities[player], self.next_row_height, self.no_cols, self.no_rows)
         if len(winning_actions) > 0:
             return winning_actions
         
-        must_block_actions = self.get_winning_actions(player = next_player)
+        must_block_actions = find_available_winning_actions(self.current_winning_possibilities[next_player], self.next_row_height, self.no_cols, self.no_rows)
         if len(must_block_actions) > 0:
             return must_block_actions
         
         all_available_actions = self.get_available_actions()
-        must_avoid_actions = self.get_winning_actions(player = next_player, use_2x_next_row_height=True)
-        if len(must_avoid_actions) > 0:
-            filtered_available_actions = np.setdiff1d(all_available_actions,must_avoid_actions)
-            if len(filtered_available_actions) > 0: 
-                return filtered_available_actions
-            else: #game is lost if opponent plays optimally
-                return all_available_actions
+        filtered_actions = exclude_must_avoid_actions(all_available_actions,self.current_winning_possibilities[next_player],self.next_row_height,self.no_rows)
+        if len(filtered_actions) > 0:
+            return filtered_actions 
         else:
             return all_available_actions
-    
-    
-    def get_winning_actions(self, player, use_2x_next_row_height = False):
-        if use_2x_next_row_height:
-            return find_available_winning_actions(self.Board, self.next_row_height+1, player, self.no_cols, self.no_rows)
-        else:
-            return find_available_winning_actions(self.Board, self.next_row_height, player, self.no_cols, self.no_rows)
-    
-    def check_four_in_a_row(self,col,row,player):
-        return check_four_in_a_row_numba(col,row,player,self.Board,self.no_cols,self.no_rows)
         
     
     def plot_board_state(self, board_state = None, update = False):
@@ -112,124 +107,75 @@ class Connect4():
         else:
             self.fig.canvas.draw()
             self.fig.canvas.flush_events()
+
+@numba.njit
+def update_winning_possibilities(board, current_possibilites, player, col, row):
+    max_rows, max_cols = board.shape
+    #eight direction possibilities
+    directions= [(-1,-1),(0,-1),(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0)]
+    for row_dir, col_dir in directions:        
+        #check if direction is possible
+        tmp_row = row+2*row_dir
+        tmp_col = col+2*col_dir
+        if not (tmp_row < max_rows and tmp_row >= 0 and tmp_col < max_cols and tmp_col >= 0):
+            continue #skip this direction
         
-
-@numba.njit
-def check_four_in_a_row_numba(col,row,player,Board,no_cols,no_rows):
-    ##check up/down
-    up_down = 1
-    #check down 
-    if row > 0:
-        for offset in range(1,row+1):
-            pass
-            if Board[row-offset,col] == player:
-                up_down += 1
-                if up_down == 4:
-                    return True
-                continue
-            else:
-                break
-    
-    #check up. note we actually don't have to check up for newly places discs
-    if row < no_rows -1:
-        for offset in range(1,no_rows-row):
-            if Board[row+offset,col] == player:
-                up_down += 1
-                if up_down == 4:
-                    return True
-                continue
-            else:
-                break
-    
-    ##check side2side
-    side2side = 1
-    #check left
-    if col > 0:
-        for offset in range(1,col+1):
-            if Board[row,col-offset] == player:
-                side2side += 1
-                if side2side == 4:
-                    return True
-                continue
-            else:
-                break
-    #check right
-    if col < no_cols-1:
-        for offset in range(1,no_cols-col):
-            if Board[row,col+offset] == player:
-                side2side += 1
-                if side2side == 4:
-                    return True
-                continue
-            else:
-                break
-    
-    ##check diagonal piover4
-    diag_piover4 = 1
-    #check down/left
-    max_rc_offset = np.minimum(row,col)
-    if max_rc_offset > 0:
-        for rc_offset in range(1,max_rc_offset+1):
-            if Board[row-rc_offset,col-rc_offset] == player:
-                diag_piover4 += 1
-                if diag_piover4 == 4:
-                    return True
-                continue
-            else:
-                break
-    #check up/right
-    max_rc_offset = np.minimum(no_rows-1-row, no_cols-1-col)
-    if max_rc_offset > 0:
-        for rc_offset in range(1,max_rc_offset+1):
-            if Board[row+rc_offset,col+rc_offset] == player:
-                diag_piover4 += 1
-                if diag_piover4 == 4:
-                    return True
-                continue
-            else:
-                break
+        #check if the two possibilities are possible 
+        tmp_row = row+3*row_dir
+        tmp_col = col+3*col_dir
+        if tmp_row < max_rows and tmp_row >= 0 and tmp_col < max_cols and tmp_col >= 0:
+            first_possibility = True
+        else:
+            first_possibility  = False
             
-    ##check diagonal 7piover4
-    diag_7piover4 = 1
-    #check up/left
-    max_rc_offset = np.minimum(no_rows-1-row, col)
-    if max_rc_offset > 0:
-        for rc_offset in range(1,max_rc_offset+1):
-            if Board[row+rc_offset,col-rc_offset] == player:
-                diag_7piover4 += 1
-                if diag_7piover4 == 4:
-                    return True
-                continue
-            else:
-                break
-    #check down/right
-    max_rc_offset = np.minimum(row, no_cols-1-col)
-    if max_rc_offset > 0:
-        for rc_offset in range(1,max_rc_offset+1):
-            if Board[row-rc_offset,col+rc_offset] == player:
-                diag_7piover4 += 1
-                if diag_7piover4 == 4:
-                    return True
-                continue
-            else:
-                break
-    
-    return False
+        tmp_row = row-1*row_dir
+        tmp_col = col-1*col_dir
+        if tmp_row < max_rows and tmp_row >= 0 and tmp_col < max_cols and tmp_col >= 0:
+            second_possibility = True
+        else:
+            second_possibility  = False
+        
+        if not (first_possibility or second_possibility):
+            continue # skip this direction
+        
+        #count first two "stones" in direction
+        count_player = 1 #one for (row,col)
+        for i in range(1,3):
+            count_player += (board[row+i*row_dir, col+i*col_dir]==player)
+
+        if count_player > 1:
+            #check first possibility. (row,col) is last in direction
+            if first_possibility and (count_player > 2 or board[row+3*row_dir,col+3*col_dir]==player):
+                for i in range(0,4):
+                    current_possibilites[row+i*row_dir,col+i*col_dir] = 1
+                
+            #check second possibility (row,col) is in the middle, but majority is in current direction
+            if second_possibility and (count_player > 2 or board[row-row_dir,col-col_dir]==player):
+                for i in range(-1,3):
+                    current_possibilites[row+i*row_dir,col+i*col_dir] = 1
 
 @numba.njit
-def find_available_winning_actions(board, next_row_height, player, no_cols, no_rows):
-    winning_moves = np.zeros(no_cols) #formatted as vector of 0 or 1 (1 being winning move)
-    
-    for col in range(no_cols):
-        if next_row_height[col] < no_rows:
-            winning_moves[col] = check_four_in_a_row_numba(col = col, 
-                                                           row = next_row_height[col], 
-                                                           player = player, 
-                                                           Board = board, 
-                                                           no_cols = no_cols, 
-                                                           no_rows = no_rows)
-    return np.where(winning_moves==1)[0]
-    
+def find_available_winning_actions(current_possibilites, next_row_heights, no_cols, no_rows):
+    winning_actions = np.zeros(no_cols) #formatted as vector of 0 or 1 (1 being winning move)
+    for col, row in enumerate(next_row_heights):
+        if row < no_rows and current_possibilites[row,col] == 1:
+            winning_actions[col] = 1
+    return np.where(winning_actions==1)[0]
+
+@numba.njit
+def exclude_must_avoid_actions(available_actions,current_foe_possibilites,next_row_heights,no_rows):
+    action_filter = np.ones(len(available_actions)) #formatted as vector of 0 or 1 (1 being winning move)
+    for action in available_actions:
+        tmp_next_foe_row_height = next_row_heights[action]+1
+        if tmp_next_foe_row_height < no_rows and current_foe_possibilites[tmp_next_foe_row_height,action] == 1:
+            action_filter[action] = 0
+    return available_actions[np.where(action_filter==1)[0]]
+        
+@numba.njit
+def get_available_actions_numba(board):
+    board_top_row = board[-1,:]
+    available_actions = np.where(board_top_row==0)[0]
+    return available_actions
 
 if __name__ == '__main__':
     import time
@@ -240,27 +186,3 @@ if __name__ == '__main__':
     game.plot_board_state()
     time.sleep(3)
     
-# =============================================================================
-#     def defineplot():
-#         x = np.linspace(0, 10*np.pi, 100)
-#         y = np.sin(x)
-#           
-#         plt.ion()
-#         fig = plt.figure()
-#         ax = fig.add_subplot(111)
-#         sc = ax.scatter(x, y)
-#         return fig, sc
-#     
-#     def updateplot(fig, sc, phase) :  
-#         x = np.linspace(0, 10*np.pi, 100)
-#         sc.set_offsets(np.c_[x,np.sin(0.5 * x + phase)])
-#         fig.canvas.draw()
-#         fig.canvas.flush_events()
-#     
-#     fig,sc = defineplot()
-#     for phase in np.linspace(0, 10*np.pi, 100):
-#         updateplot(fig,sc,phase)
-#     input('do you want to see more?')
-#     for phase in np.linspace(0, 10*np.pi, 100):
-#         updateplot(fig,sc,phase)
-# =============================================================================

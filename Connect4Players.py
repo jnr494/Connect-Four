@@ -8,13 +8,14 @@ Created on Mon Nov 28 19:57:25 2022
 import numpy as np
 import MonteCarloTreeSearch as MCTS
 import copy
+import numba
 
 class RandomPlayer:
     def __init__(self):
         pass
     
-    def make_action(self, env_state, available_actions):
-        return np.random.choice(available_actions)
+    def make_action(self, game, available_actions):
+        return make_random_choice(available_actions)
     
     def reset(self):
         pass
@@ -25,12 +26,12 @@ class DQPlayer:
         self.epsilon = epsilon
         self.RandomPlayer = RandomPlayer()
         
-    def make_action(self, env_state, available_actions):
+    def make_action(self, game, available_actions):
         uniform = np.random.uniform()
         if uniform < self.epsilon:
-            return self.RandomPlayer.make_action(env_state, available_actions)
+            return self.RandomPlayer.make_action(game, available_actions)
         else:
-            q_values = self.QModel.predict(np.expand_dims(env_state.flatten(),axis=0))
+            q_values = self.QModel.predict(np.expand_dims(game.Board.flatten(),axis=0))
             q_values_available = q_values[0,available_actions]
             action = available_actions[np.argmax(q_values_available)]
             return action
@@ -39,8 +40,8 @@ class DQPlayer:
         pass
 
 class MCTSPlayer:
-    def __init__(self, game, player, next_player, max_count, max_depth, confidence_value, rave_param = None, reuse_tree = True):
-        self.game = copy.deepcopy(game)
+    def __init__(self, game, player, next_player, max_count, max_depth, confidence_value, rave_param = None, reuse_tree = True, randomize_action = False):
+        self.game = game
         self.player = player
         self.next_player = next_player
         self.max_count = max_count
@@ -48,14 +49,14 @@ class MCTSPlayer:
         self.confidence_value = confidence_value
         self.rave_param = rave_param
         self.RandomPlayer = RandomPlayer()
-        self.tree = None
         self.reuse_tree = reuse_tree
-        self.winning_probability = None
+        self.randomize_action = randomize_action
         
-    def make_action(self, env_state, available_actions):  
-        self.game.reset(env_state)
-        #best_action, new_root = MCTS.MonteCarloTreeSearch(self.game, self.player, self.next_player, self.max_count, self.max_depth,
-        #                                 self.confidence_value, self.RandomPlayer, None)################################################
+        self.reset()
+        
+    def make_action(self, game, available_actions):  
+        self.game = game
+        #important that env_state comes from game.
         best_action, tree, winning_probability = MCTS.MonteCarloTreeSearch(self.game, self.player, self.next_player, self.max_count, self.max_depth,
                                          self.confidence_value, self.rave_param, self.RandomPlayer, self.tree)
         
@@ -63,11 +64,23 @@ class MCTSPlayer:
         
         if self.reuse_tree:
             self.tree = tree
-        return best_action
+            
+        if self.randomize_action:
+            action_probabilities = MCTS.get_action_probabilities(self.game, tree, temperature=1)
+            action = np.random.choice(self.game.no_cols,p=action_probabilities)
+            return (action,action_probabilities)
+        else: 
+            return best_action
     
     def reset(self):
-        self.root_node = None
+        self.tree = None
+        self.winning_probability = None
         
     def get_optimal_actions_qvalues(self):
         best_actions, q_values,amaf_q_values,nodes = MCTS.get_optimal_tree_actions(self.game,self.tree,self.player,self.next_player)
         return best_actions, q_values,amaf_q_values,nodes
+    
+    
+@numba.njit
+def make_random_choice(available_actions):
+    return np.random.choice(available_actions)
