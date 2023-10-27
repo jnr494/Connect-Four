@@ -150,13 +150,13 @@ def main2():
     player = 1
     next_player = -1
     confidence_value = 1
-    max_count = 5e3
+    max_count = 1e2
     max_depth = 100
     
-    rave0 = None
-    rave1 = None
-    cv0 = 2**0
-    cv1 = 2**0
+    rave0 = 2**0
+    rave1 = 2**0
+    cv0 = 2**2
+    cv1 = 2**2
     tree0 = True
     tree1 = True
     

@@ -114,14 +114,15 @@ def select_node_action_ucb1(node, confidence_value, rave_param, max_bool = True)
                                          rave_bool,
                                          rave_param,
                                          node['actions'], 
-                                         max_bool)
+                                         max_bool,
+                                         node['priors'])
 
 @numba.njit
 def select_node_action_ucb1_numba(q_values, no_visits, no_visits_actions, confidence_value,
                                   amaf_q_values, amaf_no_visits_actions,rave_bool,rave_param, 
-                                  actions, max_bool):
+                                  actions, max_bool, priors):
     
-    exploration_term = np.sqrt(np.log(no_visits) / (no_visits_actions+1e-8))    
+    exploration_term = priors * np.sqrt(no_visits) / (no_visits_actions+1)    
     
     if rave_bool:
         beta = amaf_no_visits_actions / (no_visits_actions + amaf_no_visits_actions + 4 * no_visits_actions * amaf_no_visits_actions * rave_param**2)
@@ -184,7 +185,8 @@ def get_optimal_tree_actions(game, tree, player, next_player):
         current_node = tree.get_node(next_state_hash)
         
 
-def MonteCarloTreeSearch(game, player, next_player, max_count, max_depth, confidence_value, rave_param, rollout_player, tree = None, evaluator = None):
+def MonteCarloTreeSearch(game, player, next_player, max_count, max_depth, confidence_value, rave_param, rollout_player, 
+                         tree = None, evaluator = None, rollout_weight = 1):
     if tree is None:
         tree = Tree()
         
@@ -219,9 +221,14 @@ def MonteCarloTreeSearch(game, player, next_player, max_count, max_depth, confid
             ##expansion and stop selection
             if not tree.is_node_in_tree(current_state_hash):
                 clever_available_actions = game_copy.get_clever_available_actions(players[player_turn],players[next_player_turn])
+                #find priors and win_prediction from evaluator
                 priors, win_prediction = evaluator(game_copy.Board)
+                filtered_priors = priors[clever_available_actions]
+                filtered_priors = filtered_priors/sum(filtered_priors)
+                
                 next_row_heights = game_copy.next_row_height[clever_available_actions]
-                tree.new_node(current_state_hash,clever_available_actions,next_row_heights, priors, win_prediction)
+                tree.new_node(current_state_hash,clever_available_actions,next_row_heights, filtered_priors, win_prediction)
+                current_node = tree.get_node(current_state_hash)
                 if no_visited_states > 1:
                     tree.update_next_state_hash(visited_state_hashes[-2],actions[-1],current_state_hash)
                 break
@@ -244,21 +251,26 @@ def MonteCarloTreeSearch(game, player, next_player, max_count, max_depth, confid
             #update player turn
             player_turn = next_player_turn
             
-        ##simulation        
-        while not terminal_bool:
-            next_player_turn = (player_turn + 1) % 2
-            #get available actions    
-            clever_available_actions = game_copy.get_clever_available_actions(players[player_turn],players[next_player_turn])
-            #get and simulate action
-            sim_action = rollout_player.make_action(game_copy.Board, clever_available_actions)
-            actions.append(sim_action)
-            new_row_heights.append(game.next_row_height[sim_action])
-            game_copy.place_disc(sim_action, players[player_turn])
+        ##simulation
+        if rollout_weight>0:
+            while not terminal_bool:
+                next_player_turn = (player_turn + 1) % 2
+                #get available actions    
+                clever_available_actions = game_copy.get_clever_available_actions(players[player_turn],players[next_player_turn])
+                #get and simulate action
+                sim_action = rollout_player.make_action(game_copy.Board, clever_available_actions)
+                actions.append(sim_action)
+                new_row_heights.append(game.next_row_height[sim_action])
+                game_copy.place_disc(sim_action, players[player_turn])
+                
+                #check if game is over
+                terminal_bool, last_player, last_player_reward = check_game_over(game_copy, players[player_turn])
+                #update player turn
+                player_turn = next_player_turn
             
-            #check if game is over
-            terminal_bool, last_player, last_player_reward = check_game_over(game_copy, players[player_turn])
-            #update player turn
-            player_turn = next_player_turn
+            last_player_reward = rollout_weight * last_player_reward + (1-rollout_weight) * current_node['prior_win_prediction']
+        else:
+            last_player_reward = current_node['prior_win_prediction']
         
         ##backprogation
         if last_player == player: #from input

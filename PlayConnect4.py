@@ -14,7 +14,7 @@ import numpy as np
 def introduction():
     debug_mode = False
     answer = input('Hello human! Do you want to play a game? [yes,no]: ')
-    time.sleep(0.5)
+    time.sleep(0.25)
     if type(answer) is not str:
         print("Answer not valid... idiot.")
         time.sleep(3)
@@ -31,18 +31,18 @@ def introduction():
         sys.exit()
     
     human_start_wish, human_color_wish = get_human_start_wish()
-    time.sleep(0.5)
+    time.sleep(0.25)
     difficulty_question = 'Choose a difficulty [easy,normal,hard,god]: '
     difficulty = input(difficulty_question)
     
     while type(difficulty) is not str or difficulty.lower() not in ['easy','normal','hard','god','e','n','h','g']:
-        time.sleep(0.5)
+        time.sleep(0.25)
         difficulty = input("Answer not valid. Please choose a valid difficulty [easy,normal,hard,god]: ")    
     
     return human_start_wish, human_color_wish, difficulty.lower(), debug_mode
     
 def create_player(difficulty,player):
-    time.sleep(0.5)
+    time.sleep(0.25)
     if difficulty in ['easy','e']:
         player = Connect4Players.RandomPlayer()
         print("Ok... pussy. Let's play...")
@@ -53,7 +53,7 @@ def create_player(difficulty,player):
                                             next_player = player*-1, 
                                             max_count = 5e2, 
                                             max_depth = 2, 
-                                            confidence_value = 2**0,
+                                            confidence_value = 2**2,
                                             rave_param=None)
         print("Ok. Let's see what you can do.")
     elif difficulty in ['hard','h']:
@@ -63,7 +63,7 @@ def create_player(difficulty,player):
                                             next_player = player*-1, 
                                             max_count = 2e3, 
                                             max_depth = 5, 
-                                            confidence_value = 2**0,
+                                            confidence_value = 2**2,
                                             rave_param=2**0) 
         print("You are brave. Let's go!")
     elif difficulty in ['god','g']:
@@ -73,8 +73,8 @@ def create_player(difficulty,player):
                                             next_player = player*-1, 
                                             max_count = 1e4,
                                             max_depth = 100, 
-                                            confidence_value = 2**0,
-                                            rave_param=None) #2**-1
+                                            confidence_value = 2**2,
+                                            rave_param=2**0) #2**-1
         print("You are a dead man... Let's go!")
     else:
         raise
@@ -83,16 +83,16 @@ def create_player(difficulty,player):
 
 #Asks human for starting and color wish
 def get_human_start_wish():
-    time.sleep(0.5)
+    time.sleep(0.25)
     human_start_wish = input('Do you wish to start? [yes,no]: ')
     
     while type(human_start_wish) is not str or human_start_wish.lower() not in ['yes','no','y','n']:
-        time.sleep(0.5)
+        time.sleep(0.25)
         human_start_wish = input("Answer not valid. Do you wish to start? [yes,no]: ")
     
     human_start_wish = human_start_wish.lower()
 
-    time.sleep(0.5)
+    time.sleep(0.25)
 
     if human_start_wish == 'yes' or human_start_wish == 'y':
         human_start_wish = 0
@@ -101,7 +101,7 @@ def get_human_start_wish():
 
     human_color_wish = input('Do you wish to be red or yellow? [red,yellow]: ')
     while type(human_color_wish) is not str or human_color_wish.lower() not in ['red','yellow','r','y']:
-        time.sleep(0.5)
+        time.sleep(0.25)
         human_color_wish = input("Answer not valid. Do you wish to be red or yellow? [red,yellow]: ")
     
     human_color_wish = human_color_wish.lower()
@@ -165,7 +165,7 @@ def GameHandler(game, ai_player, human_start_wish, human_color_wish, debug_mode)
                     print('Q values:',[round(i,4) for i in q_values])
                     print('AMAF Q values:',[round(i,4) for i in amaf_q_values])
                     for idx, node in enumerate(nodes):
-                        print('Number of visits '+str(idx)+':',node['no_visits_actions'])
+                        print('Number of visits '+str(idx)+':',node['no_visits_actions'],'Q:',tuple(np.round(node['q_values'],3)),'AA:',node['actions']+1)
         
         #perform action and plot game
         game_over = game.place_disc(action, player_value)
