@@ -19,7 +19,7 @@ class Connect4():
         self.fig = None
         self.reset(game)
         
-    def place_disc(self, col, player):
+    def place_disc(self, col: int, player: int) -> bool:
         #place disc
         row = self.next_row_height[col]
         self.Board[row,col] = player
