@@ -12,15 +12,22 @@ import time
 import numpy as np
 
 class PlayConnect4:
+    
+    human_color_wish: int = 1 #Red
+    human_start_wish: int = 1 #Not Starting
+    difficulty: str = ""
+    _quick_start: bool = False
+    
     def __init__(self):
         pass
     
     def start_game(self):
         self.does_human_want_to_play()
-        self.get_human_start_wish()
-        self.get_human_color_wish()
+        if not self._quick_start:
+            self.get_human_start_wish()
+            self.get_human_color_wish()
         
-    def does_human_want_to_play(self) -> None:
+    def _does_human_want_to_play(self) -> None:
         answer = input('Hello human! Do you want to play a game? [yes,no]: ')
         time.sleep(0.25)
         if type(answer) is not str:
@@ -31,13 +38,16 @@ class PlayConnect4:
             print('Pussy...')
             time.sleep(3)
             sys.exit()
+        elif answer.lower() in ['quick','q']:
+            print("Quick Start")
+            self._quick_start = True
         elif answer.lower() not in ['yes','y']:
             print('Answer is neither yes or no... idiot.')
             time.sleep(3)
             sys.exit()
             
     #Asks human for color wish
-    def get_human_start_wish(self) -> None:
+    def _get_human_start_wish(self) -> None:
         time.sleep(0.25)
         human_start_wish = input('Do you wish to start? [yes,no]: ')
         
@@ -57,7 +67,7 @@ class PlayConnect4:
         self.human_start_wish = human_start_wish
     
     #Asks human for color wish
-    def get_human_color_wish(self) -> None:
+    def _get_human_color_wish(self) -> None:
         human_color_wish = input('Do you wish to be red or yellow? [red,yellow]: ')
         while type(human_color_wish) is not str or human_color_wish.lower() not in ['red','yellow','r','y']:
             time.sleep(0.25)
@@ -73,7 +83,7 @@ class PlayConnect4:
         self.human_color_wish = human_color_wish
     
     #Asks human for difficulty
-    def get_human_difficulty_wish(self) -> None:
+    def _get_human_difficulty_wish(self) -> None:
         time.sleep(0.25)
         difficulty_question: str = 'Choose a difficulty [easy,normal,hard,god]: '
         difficulty: str = input(difficulty_question)
