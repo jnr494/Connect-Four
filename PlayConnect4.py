@@ -2,27 +2,31 @@
 """
 Created on Tue Dec  6 18:48:08 2022
 
-@author: mrgna
+@author: magnus
 """
 
-import Connect4Game
-import Connect4Players
 import sys
 import time
 import numpy as np
 
+import Connect4Game
+import Connect4Players
+import GameTurnHandler
+
 class PlayConnect4:
     
-    game = None
+    _game: Connect4Game.Connect4
+    _game_turn_handler: GameTurnHandler.GameTurnHandler
     human_color_wish: int = 1 #Red
     human_start_wish: int = 1 #Not Starting
-    difficulty: str = ""
+    difficulty: str
     _quick_start: bool = False
     _debug: bool = False
     
-    def __init__(self, game):
-        self.game = game
-    
+    def __init__(self, game: Connect4Game.Connect4, game_turn_handler: GameTurnHandler.GameTurnHandler):
+        self._game = game
+        self._game_turn_handler = game_turn_handler
+        
     def setup_game(self):
 
         self._does_human_want_to_play()
@@ -37,39 +41,47 @@ class PlayConnect4:
         self._create_player()
     
     def prepare_game(self):
-        self._player_turn = 0
-        if self.human_start_wish == self._player_turn:
-            self._player_values = [self.human_color_wish, self.human_color_wish*-1]
+        #Prepare GameTurnHandler
+        player_values: list[int]    
+        if self.human_start_wish == 0:
+            player_values = [self.human_color_wish, self.human_color_wish*-1]
         else:
-            self._player_values = [self.human_color_wish*-1, self.human_color_wish]
+            player_values = [self.human_color_wish*-1, self.human_color_wish]
+        
+        self._game_turn_handler.reset(player_values)
             
-        self.game.reset()
+        #Reset Game
+        self._game.reset()
         
     def start_game(self):
-        #init plot of game
-        self.game.plot_board_state(update = True)
+        action: int
+        player_value: int
+        next_player_value: int
         
-        while True:
-            player_value = self._player_values[self._player_turn]
-            self._next_player_turn = (self._player_turn + 1) % 2
-            next_player_value = self._player_values[self._next_player_turn]
+        #init plot of game
+        self._game.plot_board_state(update = True)
+        
+        for _ in range(self._game.no_cols*self._game.no_rows):
+            player_value = self._game_turn_handler.get_current_player_value()
+            next_player_value = self._game_turn_handler.get_next_player_value()
             
             #if human turn then ask human for action else ask AI player
-            if self._player_turn == self.human_start_wish:
+            if player_value == self.human_color_wish:
                 action = self._get_human_action()
             else:
-                clever_available_actions = self.game.get_clever_available_actions(player_value, next_player_value)
-                action = self.player.make_action(self.game, clever_available_actions)
+                clever_available_actions = self._game.get_clever_available_actions(player_value, next_player_value)
+                action = self.player.make_action(self._game, clever_available_actions)
                 self._log_player_action(action)
             
             #perform action and plot game
-            self.game_over = self.game.place_disc(action, player_value)
-            self.game.plot_board_state(update = True)
+            self.game_over = self._game.place_disc(action, player_value)
+            self._game.plot_board_state(update = True)
             
             #Check if game is over
             self._check_game_over()
             
-            self._player_turn = self._next_player_turn
+            #Go to next turn
+            self._game_turn_handler.next_turn()
         
         print("We are draw... Good game.")
         input("Press Escape to stop the game: ")
@@ -183,7 +195,7 @@ class PlayConnect4:
         
     #Asks human for action
     def _get_human_action(self) -> int:
-        available_actions = self.game.get_available_actions()
+        available_actions = self._game.get_available_actions()
         available_actions = np.array(available_actions)+1 #adjust for be 1-based
         
         human_action = input('Your turn human. Choose a column to play ' + str(available_actions) + ": ")
@@ -208,7 +220,7 @@ class PlayConnect4:
         if not self.game_over:
             return
         
-        if self._player_turn != self.human_start_wish:
+        if self._game_turn_handler.get_next_player_value() == self.human_start_wish:
             print("YOU SUCK! I knew it...")
         else:
             print("God damn it... You are the master.")
@@ -230,7 +242,8 @@ class PlayConnect4:
 
 def main():
     game = Connect4Game.Connect4()
-    playConnect4 = PlayConnect4(game)
+    game_turn_handler = GameTurnHandler.GameTurnHandler()
+    playConnect4 = PlayConnect4(game, game_turn_handler)
     playConnect4.setup_game()
     playConnect4.prepare_game()
     playConnect4.start_game()
