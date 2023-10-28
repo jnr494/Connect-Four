@@ -49,7 +49,7 @@ class PlayConnect4:
         #init plot of game
         self.game.plot_board_state(update = True)
         
-        for i in range(6*7):
+        while True:
             player_value = self._player_values[self._player_turn]
             self._next_player_turn = (self._player_turn + 1) % 2
             next_player_value = self._player_values[self._next_player_turn]
@@ -60,29 +60,14 @@ class PlayConnect4:
             else:
                 clever_available_actions = self.game.get_clever_available_actions(player_value, next_player_value)
                 action = self.player.make_action(self.game, clever_available_actions)
-                print('I will play column',action+1)
-                if hasattr(self.player, 'winning_probability'):
-                    print('I estimate that my probability of winning is: ',str(round(self.player.winning_probability,4)*100)+'%')
-                    if self._debug:
-                        optimal_actions, q_values,amaf_q_values,nodes = self.player.get_optimal_actions_qvalues()
-                        print('Optimal actions:',[i+1 for i in optimal_actions])
-                        print('Q values:',[round(i,4) for i in q_values])
-                        print('AMAF Q values:',[round(i,4) for i in amaf_q_values])
-                        for idx, node in enumerate(nodes):
-                            print('Number of visits '+str(idx)+':',node['no_visits_actions'],'Q:',tuple(np.round(node['q_values'],3)),'AA:',node['actions']+1)
+                self._log_player_action(action)
             
             #perform action and plot game
-            game_over = self.game.place_disc(action, player_value)
+            self.game_over = self.game.place_disc(action, player_value)
             self.game.plot_board_state(update = True)
             
             #Check if game is over
-            if game_over:
-                if self._player_turn != self.human_start_wish:
-                    print("YOU SUCK! I knew it...")
-                else:
-                    print("God damn it... You are the master.")
-                input("Press Escape to stop the game: ")
-                sys.exit()
+            self.check_game_over()
             
             self._player_turn = self._next_player_turn
         
@@ -217,12 +202,32 @@ class PlayConnect4:
                 human_action = None
            
         return int(human_action)-1 #adjsut to be 0-based
+
+    #Check if game is over and who has won
+    def _check_game_over(self) -> None:
+        if not self.game_over:
+            return
         
+        if self._player_turn != self.human_start_wish:
+            print("YOU SUCK! I knew it...")
+        else:
+            print("God damn it... You are the master.")
+        input("Press Escape to stop the game: ")
+        sys.exit()
     
-    
+    def _log_player_action(self, action: int):
+        print('I will play column',action+1)
+        if hasattr(self.player, 'winning_probability'):
+            print('I estimate that my probability of winning is: ',str(round(self.player.winning_probability,4)*100)+'%')
+            if self._debug:
+                optimal_actions, q_values,amaf_q_values,nodes = self.player.get_optimal_actions_qvalues()
+                print('Optimal actions:',[i+1 for i in optimal_actions])
+                print('Q values:',[round(i,4) for i in q_values])
+                print('AMAF Q values:',[round(i,4) for i in amaf_q_values])
+                for idx, node in enumerate(nodes):
+                    print('Number of visits '+str(idx)+':',node['no_visits_actions'],'Q:',tuple(np.round(node['q_values'],3)),'AA:',node['actions']+1)
     
 
-    
 def main():
     game = Connect4Game.Connect4()
     playConnect4 = PlayConnect4(game)
