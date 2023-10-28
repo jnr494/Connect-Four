@@ -67,7 +67,7 @@ class PlayConnect4:
             self.game.plot_board_state(update = True)
             
             #Check if game is over
-            self.check_game_over()
+            self._check_game_over()
             
             self._player_turn = self._next_player_turn
         
