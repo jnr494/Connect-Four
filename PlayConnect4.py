@@ -7,6 +7,7 @@ import Connect4Players
 import GameTurnHandler
 from LoggerHandler import LoggerHandler
 from IPlayer import IPlayer
+import logging
 
 class PlayConnect4:
     
@@ -17,7 +18,7 @@ class PlayConnect4:
     difficulty: str
     _quick_start: bool = False
     _debug: bool = False
-    _logger: LoggerHandler
+    _logger: logging.Logger
     player: IPlayer
 
     def __init__(self, game: Connect4Game.Connect4, game_turn_handler: GameTurnHandler.GameTurnHandler, logger_handler: LoggerHandler):
