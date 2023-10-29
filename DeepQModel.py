@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Nov 28 22:30:05 2022
-
-@author: mrgna
-"""
-
 #Used inpiration from https://keras.io/examples/rl/deep_q_network_breakout/
 
 import tensorflow as tf

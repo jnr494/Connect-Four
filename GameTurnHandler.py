@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Oct 28 10:26:39 2023
-
-@author: magnus
-"""
-
 import itertools
 
 class GameTurnHandler:

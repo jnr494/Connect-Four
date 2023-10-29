@@ -1,8 +1,3 @@
-"""
-Created on Sun Oct 29 18:09:18 2023
-
-@author: magnus
-"""
 import unittest
 import GameTurnHandler
 

@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Oct 28 12:43:57 2023
-
-@author: Magnus
-"""
-
 import logging
 
 class LoggerHandler:

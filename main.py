@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Nov 28 20:01:59 2022
-
-@author: mrgna
-"""
-
 import numpy as np
 import Connect4Game as C4Game
 import Connect4Players as C4Players

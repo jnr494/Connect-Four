@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Dec  4 18:57:27 2022
-
-@author: magnus
-inspiared by: https://webdocs.cs.ualberta.ca/~hayward/396/jem/mcts.html
-"""
-
 import numpy as np
 import numba
 import Connect4Game

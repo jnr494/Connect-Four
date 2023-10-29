@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Oct 27 23:26:27 2023
-
-@author: mrgna
-"""
-
 import unittest
 import numpy as np
 
