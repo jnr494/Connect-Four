@@ -62,9 +62,11 @@ class Connect4():
             self.current_winning_possibilities = copy.deepcopy(game.current_winning_possibilities)
             self.winner = game.winner
             
-    
+    def get_turn_handler(self) -> GameTurnHandler:
+        return self._game_turn_handler
+        
     def copy(self):
-        return Connect4(self, self._game_turn_handler)
+        return Connect4(self, self._game_turn_handler.copy())
     
     def get_available_actions(self) -> list[int]:
         return get_available_actions_numba(self.Board)
