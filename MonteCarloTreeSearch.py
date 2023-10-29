@@ -183,7 +183,7 @@ def MonteCarloTreeSearch(game, player, next_player, max_count, max_depth, confid
         
     if evaluator is None:
         no_cols = game.Board.shape[1]
-        evaluator = lambda board: (np.zeros(no_cols)+1/no_cols,0.5)
+        evaluator = lambda board: (np.zeros(no_cols)+1/no_cols,0.5)  # noqa: E731
 
     use_rave = rave_param is not None
 
