@@ -9,9 +9,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numba
 import copy
+from GameTurnHandler import GameTurnHandler
 
 class Connect4():
-    def __init__(self, game = None):
+    
+    _game_turn_handler: GameTurnHandler
+    
+    def __init__(self, game = None, game_turn_handler: GameTurnHandler = None):
         self.no_rows = 6
         self.no_cols = 7
         self.blank_value = 0
@@ -19,6 +23,11 @@ class Connect4():
         self.fig = None
         self.reset(game)
         
+        self._game_turn_handler = game_turn_handler
+    
+    def place_disc_using_turn_handler(self, col: int) -> bool:
+        return self.place_disc(col, self._game_turn_handler.get_current_player_value())
+    
     def place_disc(self, col: int, player: int) -> bool:
         #place disc
         row = self.next_row_height[col]
@@ -36,7 +45,7 @@ class Connect4():
             return False
     
     
-    def reset(self, game = None):
+    def reset(self, game = None) -> None:
         if game is None:
             self.Board = np.zeros((self.no_rows,self.no_cols))
             self.next_row_height = np.zeros((self.no_cols,),dtype=int)
@@ -49,11 +58,17 @@ class Connect4():
             self.winner = game.winner
             
     
-    def get_available_actions(self):
+    def copy(self):
+        return Connect4(self, self._game_turn_handler)
+    
+    def get_available_actions(self) -> list[int]:
         return get_available_actions_numba(self.Board)
     
-    def get_clever_available_actions(self, player, next_player):
-        winning_actions =find_available_winning_actions(self.current_winning_possibilities[player], self.next_row_height, self.no_cols, self.no_rows)
+    def get_clever_available_actions_using_turn_handler(self) -> list[int]:
+        return self.get_clever_available_actions(self._game_turn_handler.get_current_player_value(), self._game_turn_handler.get_next_player_value())
+    
+    def get_clever_available_actions(self, player: int, next_player: int) -> list[int]:
+        winning_actions = find_available_winning_actions(self.current_winning_possibilities[player], self.next_row_height, self.no_cols, self.no_rows)
         if len(winning_actions) > 0:
             return winning_actions
         

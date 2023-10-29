@@ -57,26 +57,21 @@ class PlayConnect4:
         
     def start_game(self):
         action: int
-        player_value: int
-        next_player_value: int
         
         #init plot of game
         self._game.plot_board_state(update = True)
         
         for _ in range(self._game.no_cols*self._game.no_rows):
-            player_value = self._game_turn_handler.get_current_player_value()
-            next_player_value = self._game_turn_handler.get_next_player_value()
             
             #if human turn then ask human for action else ask AI player
-            if player_value == self.human_color_wish:
+            if self._game_turn_handler.get_current_player_value() == self.human_color_wish:
                 action = self._get_human_action()
             else:
-                clever_available_actions = self._game.get_clever_available_actions(player_value, next_player_value)
-                action = self.player.make_action(self._game, clever_available_actions)
+                action = self._get_nonhuman_player_action()
                 self._log_player_action(action)
             
             #perform action and plot game
-            self.game_over = self._game.place_disc(action, player_value)
+            self.game_over = self._game.place_disc_using_turn_handler(action)
             self._game.plot_board_state(update = True)
             
             #Check if game is over
@@ -216,7 +211,13 @@ class PlayConnect4:
                 human_action = None
            
         return int(human_action)-1 #adjsut to be 0-based
-
+    
+    #Get action from non-human player
+    def _get_nonhuman_player_action(self) -> int:
+        clever_available_actions = self._game.get_clever_available_actions_using_turn_handler()
+        action = self.player.make_action(self._game, clever_available_actions)
+        return action
+    
     #Check if game is over and who has won
     def _check_game_over(self) -> None:
         if not self.game_over:
@@ -254,9 +255,10 @@ class PlayConnect4:
 
 def main():
     playConnect4_logger = Logger.create_PlayConnect4Logger()
-    game = Connect4Game.Connect4()
     game_turn_handler = GameTurnHandler.GameTurnHandler()
+    game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
     playConnect4 = PlayConnect4(game, game_turn_handler, playConnect4_logger)
+    
     playConnect4.setup_game()
     playConnect4.prepare_game()
     playConnect4.start_game()
