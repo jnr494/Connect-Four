@@ -82,8 +82,8 @@ def find_first_in_array(array,element):
         return -1
 
 
-def check_game_over(game, player):
-    game_won = player == game.winner
+def check_game_over(game: Connect4Game.Connect4, player: int):
+    game_won = player == game.get_winner()
     if game_won:
         terminal_bool = True
         last_player_reward = 1
@@ -158,7 +158,7 @@ def get_action_probabilities(game, tree,temperature=1):
     return no_visits_temperature/sum(no_visits_temperature)
     
 
-def get_optimal_tree_actions(game, tree, player, next_player):
+def get_optimal_tree_actions(game : Connect4Game.Connect4, tree : Tree, player: int, next_player: int):
     start_state_hash = hash(game.Board.tobytes())
     current_node = tree.get_node(start_state_hash)
     
@@ -194,7 +194,7 @@ def MonteCarloTreeSearch(game, player, next_player, max_count, max_depth, confid
         no_cols = game.Board.shape[1]
         evaluator = lambda board: (np.zeros(no_cols)+1/no_cols,0.5)
 
-    use_rave = rave_param != None
+    use_rave = rave_param is not None
 
     counter = 0
     
