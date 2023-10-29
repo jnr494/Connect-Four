@@ -33,12 +33,28 @@ def test_copy():
     #Also check that the original game_turn_handler did not go to the next turn
     assert game_turn_handler.get_current_player_value() == 5
     assert game_turn_handler.get_next_player_value() == 6
+
+def run_test(test_function):
+    try:
+        test_function()
+        return True
+    except Exception as ex:
+        template = "An exception of type {0} occurred in test: '{1}'"
+        message = template.format(type(ex).__name__, test_function.__name__)
+        print (message)
+        return False
     
 def run_GameTurnHandler_tests():
-    test_creation()
-    test_next_turn()
-    test_copy()
+    result = True
+    result = result & run_test(test_creation)
+    result = result & run_test(test_next_turn)
+    result = result & run_test(test_copy)
+    
+    return result
 
 if __name__ == "__main__":
-    run_GameTurnHandler_tests()
-    print("Connect4Game tests passed")
+    result = run_GameTurnHandler_tests()
+    if result:
+        print("GameTurnHandler tests passed")
+    else:
+        print("GameTurnHandler tests failed")
