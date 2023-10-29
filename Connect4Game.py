@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Nov 27 18:14:33 2022
-
-@author: mrgna
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 import numba
@@ -132,7 +125,7 @@ class Connect4():
             self.fig.canvas.flush_events()
 
 @numba.njit
-def update_winning_possibilities(board, current_possibilites, player, col, row):
+def update_winning_possibilities(board, current_possibilities, player, col, row):
     max_rows, max_cols = board.shape
     #eight direction possibilities
     directions= [(-1,-1),(0,-1),(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0)]
@@ -170,27 +163,27 @@ def update_winning_possibilities(board, current_possibilites, player, col, row):
             #check first possibility. (row,col) is last in direction
             if first_possibility and (count_player > 2 or board[row+3*row_dir,col+3*col_dir]==player):
                 for i in range(0,4):
-                    current_possibilites[row+i*row_dir,col+i*col_dir] = 1
+                    current_possibilities[row+i*row_dir,col+i*col_dir] = 1
                 
             #check second possibility (row,col) is in the middle, but majority is in current direction
             if second_possibility and (count_player > 2 or board[row-row_dir,col-col_dir]==player):
                 for i in range(-1,3):
-                    current_possibilites[row+i*row_dir,col+i*col_dir] = 1
+                    current_possibilities[row+i*row_dir,col+i*col_dir] = 1
 
 @numba.njit
-def find_available_winning_actions(current_possibilites, next_row_heights, no_cols, no_rows):
+def find_available_winning_actions(current_possibilities, next_row_heights, no_cols, no_rows):
     winning_actions = np.zeros(no_cols) #formatted as vector of 0 or 1 (1 being winning move)
     for col, row in enumerate(next_row_heights):
-        if row < no_rows and current_possibilites[row,col] == 1:
+        if row < no_rows and current_possibilities[row,col] == 1:
             winning_actions[col] = 1
     return np.where(winning_actions==1)[0]
 
 @numba.njit
-def exclude_must_avoid_actions(available_actions,current_foe_possibilites,next_row_heights,no_rows):
+def exclude_must_avoid_actions(available_actions,current_foe_possibilities,next_row_heights,no_rows):
     action_filter = np.ones(len(available_actions)) #formatted as vector of 0 or 1 (1 being winning move)
     for action in available_actions:
         tmp_next_foe_row_height = next_row_heights[action]+1
-        if tmp_next_foe_row_height < no_rows and current_foe_possibilites[tmp_next_foe_row_height,action] == 1:
+        if tmp_next_foe_row_height < no_rows and current_foe_possibilities[tmp_next_foe_row_height,action] == 1:
             action_filter[action] = 0
     return available_actions[np.where(action_filter==1)[0]]
         

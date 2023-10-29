@@ -208,7 +208,7 @@ class PlayConnect4:
             except ValueError:
                 human_action = None
            
-        return int(human_action)-1 #adjsut to be 0-based
+        return int(human_action)-1 #adjust to be 0-based
     
     #Get action from non-human player
     def _get_nonhuman_player_action(self) -> int:

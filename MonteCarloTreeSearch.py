@@ -263,7 +263,7 @@ def MonteCarloTreeSearch(game, player, next_player, max_count, max_depth, confid
         else:
             last_player_reward = current_node['prior_win_prediction']
         
-        ##backprogation
+        ##backpropagation
         if last_player == player: #from input
             player_reward = last_player_reward
         else:
