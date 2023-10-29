@@ -50,7 +50,7 @@ class PlayConnect4:
         else:
             player_values = [self.human_color_wish*-1, self.human_color_wish]
         
-        self._game_turn_handler.reset(player_values)
+        self._game_turn_handler.setup(player_values)
             
         #Reset Game
         self._game.reset()
