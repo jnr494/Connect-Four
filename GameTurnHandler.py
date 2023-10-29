@@ -48,7 +48,7 @@ class GameTurnHandler:
     
 if __name__ == '__main__':
     game_turn_handler = GameTurnHandler()
-    game_turn_handler.reset([4,5,6,7,9],2)
+    game_turn_handler.reset([4,5,6,7,9],3)
     print(game_turn_handler.get_current_player_value(),game_turn_handler.get_next_player_value())
     game_turn_handler.next_turn()
     print(game_turn_handler.get_current_player_value(),game_turn_handler.get_next_player_value())
