@@ -69,7 +69,7 @@ class PlayConnect4:
             else:
                 action = self._get_nonhuman_player_action()
                 self._log_player_action(action)
-            
+                
             #perform action and plot game
             self.game_over = self._game.place_disc_using_turn_handler(action)
             self._game.plot_board_state(update = True)
@@ -223,10 +223,10 @@ class PlayConnect4:
         if not self.game_over:
             return
         
-        if self._game_turn_handler.get_next_player_value() == self.human_color_wish:
-            self._message_to_human_player("YOU SUCK! I knew it...")
-        else:
+        if self._game.get_winner() == self.human_color_wish:
             self._message_to_human_player("God damn it... You are the master.")
+        else:
+            self._message_to_human_player("YOU SUCK! I knew it...")
         self._question_to_human_player("Press Escape to stop the game: ")
         sys.exit()
     

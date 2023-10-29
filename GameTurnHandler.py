@@ -52,13 +52,4 @@ if __name__ == '__main__':
     print(game_turn_handler.get_current_player_value(),game_turn_handler.get_next_player_value())
     game_turn_handler.next_turn()
     print(game_turn_handler.get_current_player_value(),game_turn_handler.get_next_player_value())
-    game_turn_handler.next_turn()
-    print(game_turn_handler.get_current_player_value(),game_turn_handler.get_next_player_value())
-    
-    new_game_turn_handler = game_turn_handler.copy()
-    print("Copy")
-    print(new_game_turn_handler.get_current_player_value(),new_game_turn_handler.get_next_player_value())
-    new_game_turn_handler.next_turn()
-    print(new_game_turn_handler.get_current_player_value(),new_game_turn_handler.get_next_player_value())
-    game_turn_handler.next_turn()
     

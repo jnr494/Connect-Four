@@ -6,9 +6,10 @@ Created on Mon Nov 28 19:57:25 2022
 """
 
 import numpy as np
-import MonteCarloTreeSearch as MCTS
 import copy
 import numba
+
+import MonteCarloTreeSearch as MCTS
 
 class RandomPlayer:
     def __init__(self):

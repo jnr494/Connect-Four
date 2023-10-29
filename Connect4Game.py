@@ -35,8 +35,11 @@ class Connect4():
         #update next_row_height
         self.next_row_height[col] += 1
         
+        
         #check for win
-        if self.current_winning_possibilities[player][row,col] == 1:
+        if self.winner != None:
+            return True
+        elif self.current_winning_possibilities[player][row,col] == 1:
             self.winner = player
             return True
         else:
@@ -44,6 +47,8 @@ class Connect4():
             update_winning_possibilities(self.Board,self.current_winning_possibilities[player],player,col,row)
             return False
     
+    def get_winner(self) -> int:
+        return self.winner
     
     def reset(self, game = None) -> None:
         if game is None:
