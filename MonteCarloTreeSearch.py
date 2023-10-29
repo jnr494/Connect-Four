@@ -6,7 +6,6 @@ Created on Sun Dec  4 18:57:27 2022
 inspiared by: https://webdocs.cs.ualberta.ca/~hayward/396/jem/mcts.html
 """
 
-import copy
 import numpy as np
 import numba
 import Connect4Game
