@@ -7,7 +7,7 @@ Created on Sat Oct 28 12:43:57 2023
 
 import logging
 
-class Logger:
+class LoggerHandler:
     
     @staticmethod
     def create_PlayConnect4Logger() -> logging.Logger:
@@ -32,6 +32,6 @@ class Logger:
     
     
 if __name__ == "__main__":
-    logger = Logger.create_PlayConnect4Logger()
+    logger = LoggerHandler.create_PlayConnect4Logger()
     logger.info("info test")
     logger.debug("debug test")

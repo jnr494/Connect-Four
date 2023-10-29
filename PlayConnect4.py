@@ -9,10 +9,11 @@ import sys
 import time
 import numpy as np
 
+import logging
 import Connect4Game
 import Connect4Players
 import GameTurnHandler
-from Logger import Logger
+from LoggerHandler import LoggerHandler
 
 class PlayConnect4:
     
@@ -23,13 +24,14 @@ class PlayConnect4:
     difficulty: str
     _quick_start: bool = False
     _debug: bool = False
-    
-    def __init__(self, game: Connect4Game.Connect4, game_turn_handler: GameTurnHandler.GameTurnHandler, logger):
+    _logger: logging.Logger
+
+    def __init__(self, game: Connect4Game.Connect4, game_turn_handler: GameTurnHandler.GameTurnHandler, logger: logging.Logger):
         self._game = game
         self._game_turn_handler = game_turn_handler
         self._logger = logger
         
-    def setup_game(self):
+    def setup_game(self) -> None:
 
         self._does_human_want_to_play()
         
@@ -42,7 +44,7 @@ class PlayConnect4:
         #Create opponent player        
         self._create_player()
     
-    def prepare_game(self):
+    def prepare_game(self) -> None:
         #Prepare GameTurnHandler
         player_values: list[int]    
         if self.human_start_wish == 0:
@@ -90,7 +92,7 @@ class PlayConnect4:
         answer = self._question_to_human_player('Hello human! Do you want to play a game? [yes,no]: ')
         
         time.sleep(0.25)
-        if type(answer) is not str:
+        if not isinstance(answer, str):
             self._message_to_human_player("Answer not valid... idiot.")
             time.sleep(3)
             sys.exit()
@@ -111,7 +113,7 @@ class PlayConnect4:
         time.sleep(0.25)
         human_start_wish = self._question_to_human_player('Do you wish to start? [yes,no]: ')
         
-        while type(human_start_wish) is not str or human_start_wish.lower() not in ['yes','no','y','n']:
+        while not isinstance(human_start_wish, str) or human_start_wish.lower() not in ['yes','no','y','n']:
             time.sleep(0.25)
             human_start_wish = self._question_to_human_player("Answer not valid. Do you wish to start? [yes,no]: ")
         
@@ -129,7 +131,7 @@ class PlayConnect4:
     #Asks human for color wish
     def _get_human_color_wish(self) -> None:
         human_color_wish = self._question_to_human_player('Do you wish to be red or yellow? [red,yellow]: ')
-        while type(human_color_wish) is not str or human_color_wish.lower() not in ['red','yellow','r','y']:
+        while not isinstance(human_color_wish, str) or human_color_wish.lower() not in ['red','yellow','r','y']:
             time.sleep(0.25)
             human_color_wish = self._question_to_human_player("Answer not valid. Do you wish to be red or yellow? [red,yellow]: ")
         
@@ -147,7 +149,7 @@ class PlayConnect4:
         time.sleep(0.25)
         difficulty: str = self._question_to_human_player('Choose a difficulty [easy,normal,hard,god]: ')
         
-        while type(difficulty) is not str or difficulty.lower() not in ['easy','normal','hard','god','e','n','h','g']:
+        while not isinstance(difficulty, str) or difficulty.lower() not in ['easy','normal','hard','god','e','n','h','g']:
             time.sleep(0.25)
             difficulty = self._question_to_human_player("Answer not valid. Please choose a valid difficulty [easy,normal,hard,god]: ")    
         
@@ -201,7 +203,7 @@ class PlayConnect4:
         
         try:
             human_action = int(human_action)
-        except:
+        except ValueError:
             human_action = None
         
         #check if chosen action is valid
@@ -209,7 +211,7 @@ class PlayConnect4:
             human_action = self._question_to_human_player("Choice not valid. Please choose a valid column "+ str(available_actions) + ": ") 
             try:
                 human_action = int(human_action)
-            except:
+            except ValueError:
                 human_action = None
            
         return int(human_action)-1 #adjsut to be 0-based
@@ -256,7 +258,7 @@ class PlayConnect4:
         print(message)
 
 def main():
-    playConnect4_logger = Logger.create_PlayConnect4Logger()
+    playConnect4_logger = LoggerHandler.create_PlayConnect4Logger()
     game_turn_handler = GameTurnHandler.GameTurnHandler()
     game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
     playConnect4 = PlayConnect4(game, game_turn_handler, playConnect4_logger)
