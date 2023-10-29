@@ -8,14 +8,25 @@ import numpy as np
 import copy
 import numba
 
+from Connect4Game import Connect4
+from IPlayer import IPlayer
+
 #class for handling gameplay
 class Connect4GameHandler:
-    def __init__(self, Connect4Game, player0, player1, save_info = True, rewards = [0.5,-1]):
-        self.game = Connect4Game
+
+    game: Connect4
+    rewards: list[int]
+    save_info: bool
+
+    actions: list[int]
+    player_turns: list[int]
+
+    def __init__(self, game: Connect4, player0: IPlayer, player1: IPlayer, save_info: bool = True, rewards: list[int] = [0.5,-1]):
+        self.game = game
         self.game_size = self.game.no_rows * self.game.no_cols
         
         self.players = [player0,player1]
-        self.no_players = 2
+        self.no_players = len(self.players)
         self.player_values = [1,-1]
 
         self.save_info = save_info
@@ -24,7 +35,7 @@ class Connect4GameHandler:
         self.reset_game()
         
     
-    def reset_game(self):
+    def reset_game(self) -> None:
         self.game.reset()
         #variables to save game states and actions
         self.actions = []

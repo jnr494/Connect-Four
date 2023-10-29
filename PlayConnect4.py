@@ -14,6 +14,7 @@ import Connect4Game
 import Connect4Players
 import GameTurnHandler
 from LoggerHandler import LoggerHandler
+from IPlayer import IPlayer
 
 class PlayConnect4:
     
@@ -25,7 +26,8 @@ class PlayConnect4:
     _quick_start: bool = False
     _debug: bool = False
     _logger: logging.Logger
-
+    player: IPlayer
+    
     def __init__(self, game: Connect4Game.Connect4, game_turn_handler: GameTurnHandler.GameTurnHandler, logger: logging.Logger):
         self._game = game
         self._game_turn_handler = game_turn_handler

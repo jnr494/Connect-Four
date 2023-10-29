@@ -6,12 +6,13 @@ Created on Mon Nov 28 19:57:25 2022
 """
 
 import numpy as np
-import copy
 import numba
 
+from IPlayer import IPlayer
 import MonteCarloTreeSearch as MCTS
+from Connect4Game import Connect4
 
-class RandomPlayer:
+class RandomPlayer(IPlayer):
     def __init__(self):
         pass
     
@@ -21,7 +22,7 @@ class RandomPlayer:
     def reset(self):
         pass
 
-class DQPlayer:
+class DQPlayer(IPlayer):
     def __init__(self, QModel, epsilon):
         self.QModel = QModel
         self.epsilon = epsilon
@@ -40,8 +41,9 @@ class DQPlayer:
     def reset(self):
         pass
 
-class MCTSPlayer:
-    def __init__(self, game, player, next_player, max_count, max_depth, confidence_value, rave_param = None, reuse_tree = True, randomize_action = False):
+class MCTSPlayer(IPlayer):
+    def __init__(self, game: Connect4, player: int, next_player: int, max_count: int, max_depth: int, 
+                 confidence_value: float, rave_param: float = None, reuse_tree: bool = True, randomize_action: bool = False):
         self.game = game
         self.player = player
         self.next_player = next_player
