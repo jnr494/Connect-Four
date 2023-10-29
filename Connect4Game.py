@@ -14,7 +14,8 @@ from GameTurnHandler import GameTurnHandler
 class Connect4():
     
     _game_turn_handler: GameTurnHandler
-    
+    _winner: int
+
     def __init__(self, game = None, game_turn_handler: GameTurnHandler = None):
         self.no_rows = 6
         self.no_cols = 7
@@ -37,10 +38,10 @@ class Connect4():
         
         
         #check for win
-        if self.winner != None:
+        if self._winner is not None:
             return True
         elif self.current_winning_possibilities[player][row,col] == 1:
-            self.winner = player
+            self._winner = player
             return True
         else:
             #update current winning_possibilities
@@ -48,19 +49,19 @@ class Connect4():
             return False
     
     def get_winner(self) -> int:
-        return self.winner
+        return self._winner
     
     def reset(self, game = None) -> None:
         if game is None:
             self.Board = np.zeros((self.no_rows,self.no_cols))
             self.next_row_height = np.zeros((self.no_cols,),dtype=int)
             self.current_winning_possibilities = {1:np.zeros((self.no_rows,self.no_cols)),-1:np.zeros((self.no_rows,self.no_cols))}
-            self.winner = None
+            self._winner = None
         else:
             self.Board = copy.deepcopy(game.Board)
             self.next_row_height = copy.deepcopy(game.next_row_height)
             self.current_winning_possibilities = copy.deepcopy(game.current_winning_possibilities)
-            self.winner = game.winner
+            self._winner = game._winner
             
     def get_turn_handler(self) -> GameTurnHandler:
         return self._game_turn_handler
