@@ -58,6 +58,8 @@ class PlayConnect4:
     def start_game(self):
         action: int
         
+        self._logger.info("Start game.")
+        
         #init plot of game
         self._game.plot_board_state(update = True)
         
