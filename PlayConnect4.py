@@ -9,7 +9,6 @@ import sys
 import time
 import numpy as np
 
-import logging
 import Connect4Game
 import Connect4Players
 import GameTurnHandler
@@ -25,13 +24,13 @@ class PlayConnect4:
     difficulty: str
     _quick_start: bool = False
     _debug: bool = False
-    _logger: logging.Logger
+    _logger: LoggerHandler
     player: IPlayer
-    
-    def __init__(self, game: Connect4Game.Connect4, game_turn_handler: GameTurnHandler.GameTurnHandler, logger: logging.Logger):
+
+    def __init__(self, game: Connect4Game.Connect4, game_turn_handler: GameTurnHandler.GameTurnHandler, logger_handler: LoggerHandler):
         self._game = game
         self._game_turn_handler = game_turn_handler
-        self._logger = logger
+        self._logger = logger_handler.get_playconnect4_logger()
         
     def setup_game(self) -> None:
 
@@ -88,7 +87,7 @@ class PlayConnect4:
         
         self._message_to_human_player("We are draw... Good game.")
         self._question_to_human_player("Press Escape to stop the game: ")
-        sys.exit()
+        self._close_game()
         
     def _does_human_want_to_play(self) -> None:
         answer = self._question_to_human_player('Hello human! Do you want to play a game? [yes,no]: ')
@@ -97,18 +96,18 @@ class PlayConnect4:
         if not isinstance(answer, str):
             self._message_to_human_player("Answer not valid... idiot.")
             time.sleep(3)
-            sys.exit()
+            self._close_game()
         elif answer.lower() in ['no','n']:
             self._message_to_human_player('Pussy...')
             time.sleep(3)
-            sys.exit()
+            self._close_game()
         elif answer.lower() in ['quick','q']:
             self._message_to_human_player("Quick Start")
             self._quick_start = True
         elif answer.lower() not in ['yes','y']:
             self._message_to_human_player("Answer is neither yes or no... idiot.")
             time.sleep(3)
-            sys.exit()
+            self._close_game()
             
     #Asks human for color wish
     def _get_human_start_wish(self) -> None:
@@ -234,7 +233,7 @@ class PlayConnect4:
         else:
             self._message_to_human_player("YOU SUCK! I knew it...")
         self._question_to_human_player("Press Escape to stop the game: ")
-        sys.exit()
+        self._close_game()
     
     def _log_player_action(self, action: int):
         self._message_to_human_player(f"I will play column {action+1}")
@@ -259,11 +258,16 @@ class PlayConnect4:
         self._logger.info(f"Message to player: '{message}'")
         print(message)
 
+
+    def _close_game(self) -> None:
+        self._logger.info("Stopping game.")
+        sys.exit()
+
 def main():
-    playConnect4_logger = LoggerHandler.create_PlayConnect4Logger()
+    logger_handler = LoggerHandler()
     game_turn_handler = GameTurnHandler.GameTurnHandler()
     game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
-    playConnect4 = PlayConnect4(game, game_turn_handler, playConnect4_logger)
+    playConnect4 = PlayConnect4(game, game_turn_handler, logger_handler)
     
     playConnect4.setup_game()
     playConnect4.prepare_game()

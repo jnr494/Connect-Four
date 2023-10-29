@@ -9,8 +9,7 @@ import logging
 
 class LoggerHandler:
     
-    @staticmethod
-    def create_PlayConnect4Logger() -> logging.Logger:
+    def get_playconnect4_logger(self) -> logging.Logger:
         logger = logging.getLogger("PlayConnect4")
         logger.setLevel(logging.DEBUG)
         
@@ -32,6 +31,7 @@ class LoggerHandler:
     
     
 if __name__ == "__main__":
-    logger = LoggerHandler.create_PlayConnect4Logger()
+    logger_handler = LoggerHandler()
+    logger = logger_handler.get_playconnect4_logger()
     logger.info("info test")
     logger.debug("debug test")
