@@ -1,7 +1,9 @@
+from typing import Tuple
+
 import numba
 import numpy as np
 import numpy.typing as npt
-from typing import Tuple
+
 import Connect4Game
 
 
@@ -9,7 +11,9 @@ class Tree:
     def __init__(self: "Tree") -> None:
         self.nodes = {}
 
-    def new_node(self: "Tree", state_hash: int, available_actions, next_row_height, priors, prior_win_prediction) -> dict:
+    def new_node(
+        self: "Tree", state_hash: int, available_actions, next_row_height, priors, prior_win_prediction,
+    ) -> dict:
         new_node = {
             "no_visits": 0,
             "actions": available_actions,
