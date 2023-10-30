@@ -1,0 +1,20 @@
+[tool.ruff]
+line-length = 120
+
+select = [
+    "A",  
+    "B", 
+    "E", 
+    "F",  
+    "ISC", 
+    "N",
+    "Q",
+    "W",
+    "I",
+    "D",
+    "UP"
+    "RUF"
+]
+
+show-fixes = true
+show-source = true

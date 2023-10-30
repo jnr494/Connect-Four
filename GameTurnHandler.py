@@ -39,7 +39,9 @@ class GameTurnHandler:
         self._next_player_value = self._player_values[self._next_player_turn]
 
     def copy(self):
-        new_game_handler = GameTurnHandler(self._player_values, self._current_player_turn)
+        new_game_handler = GameTurnHandler(
+            self._player_values, self._current_player_turn
+        )
         return new_game_handler
 
 
