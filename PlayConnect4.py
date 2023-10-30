@@ -68,7 +68,7 @@ class PlayConnect4:
 
         for _ in range(self._game.no_cols * self._game.no_rows):
             # if human turn then ask human for action else ask AI player
-            if self._game_turn_handler.get_current_player_value() == self.human_color_wish:
+            if self._game.get_current_player() == self.human_color_wish:
                 action = self._get_human_action()
             else:
                 action = self._get_nonhuman_player_action()
@@ -82,7 +82,7 @@ class PlayConnect4:
             self._check_game_over()
 
             # Go to next turn
-            self._game_turn_handler.next_turn()
+            self._game.next_turn()
 
         self._message_to_human_player("We are draw... Good game.")
         self._question_to_human_player("Press Escape to stop the game: ")

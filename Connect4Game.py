@@ -46,6 +46,12 @@ class Connect4:
     def get_winner(self: "Connect4") -> int:
         return self._winner
 
+    def next_turn(self: "Connect4") -> None:
+        self._game_turn_handler.next_turn()
+
+    def get_current_player(self: "Connect4") -> int:
+        return self._game_turn_handler.get_current_player_value()
+
     def reset(self: "Connect4", game: "Connect4" = None) -> None:
         if game is None:
             self.Board = np.zeros((self.no_rows, self.no_cols))
