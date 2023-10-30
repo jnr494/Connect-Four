@@ -2,3 +2,5 @@
 *.log
 .vscode/settings.json
 ruff.toml
+*.toml
+pyproject.toml
