@@ -86,14 +86,13 @@ def check_game_over(game: Connect4Game.Connect4, player: int):
     if game_won:
         terminal_bool = True
         last_player_reward = 1.0
-    else:
+    elif len(game.get_available_actions()) == 0:
         # check if game is draw
-        if len(game.get_available_actions()) == 0:
-            terminal_bool = True
-            last_player_reward = 0.5
-        else:
-            terminal_bool = False
-            last_player_reward = 0.0
+        terminal_bool = True
+        last_player_reward = 0.5
+    else:
+        terminal_bool = False
+        last_player_reward = 0.0
 
     return terminal_bool, player, last_player_reward
 
