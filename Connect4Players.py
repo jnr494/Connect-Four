@@ -41,28 +41,23 @@ class DQPlayer(IPlayer):
 
 
 class MCTSPlayer(IPlayer):
-    def __init__(
-        self: "MCTSPlayer",
-        game: Connect4,
-        player: int,
-        next_player: int,
-        max_count: int,
-        max_depth: int,
-        confidence_value: float,
-        rave_param: float | None = None,
-        reuse_tree: bool = True,
-        randomize_action: bool = False,
-    ) -> None:
+
+    game: Connect4
+    player: int
+    next_player: int
+    max_count: int = 1e3
+    max_depth: int = 5
+    confidence_value: float = 2**2
+    rave_param: float | None = None
+    reuse_tree: bool = True
+    randomize_action: bool = False
+    winning_probability: float
+    random_player: RandomPlayer = RandomPlayer()
+
+    def __init__(self: "MCTSPlayer", game: Connect4, player: int, next_player: int) -> None:
         self.game = game
         self.player = player
         self.next_player = next_player
-        self.max_count = max_count
-        self.max_depth = max_depth
-        self.confidence_value = confidence_value
-        self.rave_param = rave_param
-        self.RandomPlayer = RandomPlayer()
-        self.reuse_tree = reuse_tree
-        self.randomize_action = randomize_action
 
         self.reset()
 
@@ -77,7 +72,7 @@ class MCTSPlayer(IPlayer):
             self.max_depth,
             self.confidence_value,
             self.rave_param,
-            self.RandomPlayer,
+            self.random_player,
             self.tree,
         )
 

@@ -9,6 +9,7 @@ import Connect4Players
 import GameTurnHandler
 from IPlayer import IPlayer
 from LoggerHandler import LoggerHandler
+from MCTSPlayerFactory import MCTSPlayerFactory
 
 
 class PlayConnect4:
@@ -67,10 +68,7 @@ class PlayConnect4:
 
         for _ in range(self._game.no_cols * self._game.no_rows):
             # if human turn then ask human for action else ask AI player
-            if (
-                self._game_turn_handler.get_current_player_value()
-                == self.human_color_wish
-            ):
+            if self._game_turn_handler.get_current_player_value() == self.human_color_wish:
                 action = self._get_human_action()
             else:
                 action = self._get_nonhuman_player_action()
@@ -134,7 +132,7 @@ class PlayConnect4:
 
         time.sleep(0.25)
 
-        self.human_start_wish = 0 if human_start_wish_str.lower() in ("yes","y") else 0
+        self.human_start_wish = 0 if human_start_wish_str.lower() in ("yes", "y") else 0
 
     # Asks human for color wish
     def _get_human_color_wish(self: "PlayConnect4") -> None:
@@ -156,7 +154,7 @@ class PlayConnect4:
 
         human_color_wish = human_color_wish.lower()
 
-        self.human_color_wish = 1 if human_color_wish in ["red","r"] else -1
+        self.human_color_wish = 1 if human_color_wish in ["red", "r"] else -1
 
     # Asks human for difficulty
     def _get_human_difficulty_wish(self: "PlayConnect4") -> None:
@@ -190,38 +188,22 @@ class PlayConnect4:
             self._message_to_human_player("Ok... pussy. Let's play...")
         elif self.difficulty in ["normal", "n"]:
             game = Connect4Game.Connect4()
-            self.player = Connect4Players.MCTSPlayer(
-                game=game,
-                player=self.human_color_wish * -1,
-                next_player=self.human_color_wish,
-                max_count=5e2,
-                max_depth=2,
-                confidence_value=2**2,
-                rave_param=None,
+            self.player = MCTSPlayerFactory.create_normal_player(
+                game=game, player=self.human_color_wish * -1, next_player=self.human_color_wish,
             )
             self._message_to_human_player("Ok. Let's see what you can do.")
+
         elif self.difficulty in ["hard", "h"]:
             game = Connect4Game.Connect4()
-            self.player = Connect4Players.MCTSPlayer(
-                game=game,
-                player=self.human_color_wish * -1,
-                next_player=self.human_color_wish,
-                max_count=2e3,
-                max_depth=5,
-                confidence_value=2**2,
-                rave_param=2**0,
+            self.player = MCTSPlayerFactory.create_hard_player(
+                game=game, player=self.human_color_wish * -1, next_player=self.human_color_wish,
             )
             self._message_to_human_player("You are brave. Let's go!")
+
         elif self.difficulty in ["god", "g"]:
             game = Connect4Game.Connect4()
-            self.player = Connect4Players.MCTSPlayer(
-                game=game,
-                player=self.human_color_wish * -1,
-                next_player=self.human_color_wish,
-                max_count=1e4,
-                max_depth=100,
-                confidence_value=2**2,
-                rave_param=2**0,
+            self.player = MCTSPlayerFactory.create_god_player(
+                game=game, player=self.human_color_wish * -1, next_player=self.human_color_wish,
             )
             self._message_to_human_player("You are a dead man... Let's go!")
         else:
@@ -244,9 +226,7 @@ class PlayConnect4:
         # check if chosen action is valid
         while human_action not in available_actions:
             human_action = self._question_to_human_player(
-                "Choice not valid. Please choose a valid column "
-                + str(available_actions)
-                + ": ",
+                "Choice not valid. Please choose a valid column " + str(available_actions) + ": ",
             )
             try:
                 human_action = int(human_action)
@@ -257,9 +237,7 @@ class PlayConnect4:
 
     # Get action from non-human player
     def _get_nonhuman_player_action(self: "PlayConnect4") -> int:
-        clever_available_actions = (
-            self._game.get_clever_available_actions_using_turn_handler()
-        )
+        clever_available_actions = self._game.get_clever_available_actions_using_turn_handler()
         action = self.player.make_action(self._game, clever_available_actions)
         return action
 
@@ -321,6 +299,7 @@ class PlayConnect4:
         self._logger.info("Stopping game.")
         sys.exit()
 
+
 def main() -> None:
     logger_handler = LoggerHandler()
     game_turn_handler = GameTurnHandler.GameTurnHandler()
@@ -330,6 +309,7 @@ def main() -> None:
     playconnect4.setup_game()
     playconnect4.prepare_game()
     playconnect4.start_game()
+
 
 if __name__ == "__main__":
     main()
