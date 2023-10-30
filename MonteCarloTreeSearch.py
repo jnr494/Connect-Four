@@ -310,10 +310,7 @@ def MonteCarloTreeSearch(
             last_player_reward = current_node["prior_win_prediction"]
 
         ##backpropagation
-        if last_player == player:  # from input
-            player_reward = last_player_reward
-        else:
-            player_reward = 1 - last_player_reward
+        player_reward = last_player_reward if (last_player == player) else 1 - last_player_reward
 
         # update player rewards
         for idx in range(0, len(visited_state_hashes)):
