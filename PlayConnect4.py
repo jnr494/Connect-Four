@@ -7,14 +7,16 @@ import numpy as np
 import Connect4Game
 import Connect4Players
 import GameTurnHandler
+from ConfigHandler import ConfigHandler
 from IPlayer import IPlayer
 from LoggerHandler import LoggerHandler
-from MCTSPlayerFactory import MCTSPlayerFactory
+from MCTSPlayerFactory import MCTSPlayerFactory, MCTSPlayerNames
 
 
 class PlayConnect4:
     _game: Connect4Game.Connect4
     _game_turn_handler: GameTurnHandler.GameTurnHandler
+    _config_handler: ConfigHandler
     human_color_wish: int = 1  # Red
     human_start_wish: int = 1  # Not Starting
     difficulty: str
@@ -28,10 +30,12 @@ class PlayConnect4:
         game: Connect4Game.Connect4,
         game_turn_handler: GameTurnHandler.GameTurnHandler,
         logger_handler: LoggerHandler,
+        config_handler: ConfigHandler,
     ) -> None:
         self._game = game
         self._game_turn_handler = game_turn_handler
         self._logger = logger_handler.get_playconnect4_logger()
+        self._config_handler = config_handler
 
     def setup_game(self: "PlayConnect4") -> None:
         self._does_human_want_to_play()
@@ -186,28 +190,34 @@ class PlayConnect4:
         if self.difficulty in ["easy", "e"]:
             self.player = Connect4Players.RandomPlayer()
             self._message_to_human_player("Ok... pussy. Let's play...")
-        elif self.difficulty in ["normal", "n"]:
-            game = Connect4Game.Connect4()
-            self.player = MCTSPlayerFactory.create_normal_player(
-                game=game, player=self.human_color_wish * -1, next_player=self.human_color_wish,
-            )
+            return
+
+        use_mcts_player = False
+        if self.difficulty in ["normal", "n"]:
+            use_mcts_player = True
+            mcts_player_name = MCTSPlayerNames.normal
             self._message_to_human_player("Ok. Let's see what you can do.")
-
         elif self.difficulty in ["hard", "h"]:
-            game = Connect4Game.Connect4()
-            self.player = MCTSPlayerFactory.create_hard_player(
-                game=game, player=self.human_color_wish * -1, next_player=self.human_color_wish,
-            )
+            use_mcts_player = True
+            mcts_player_name = MCTSPlayerNames.hard
             self._message_to_human_player("You are brave. Let's go!")
-
         elif self.difficulty in ["god", "g"]:
-            game = Connect4Game.Connect4()
-            self.player = MCTSPlayerFactory.create_god_player(
-                game=game, player=self.human_color_wish * -1, next_player=self.human_color_wish,
-            )
+            use_mcts_player = True
+            mcts_player_name = MCTSPlayerNames.god
             self._message_to_human_player("You are a dead man... Let's go!")
-        else:
-            raise
+
+        if use_mcts_player:
+            self.player = MCTSPlayerFactory.create_player(
+                game=self._game,
+                player=self.human_color_wish * -1,
+                next_player=self.human_color_wish,
+                name=mcts_player_name,
+                config_handler=self._config_handler,
+            )
+            return
+
+        # If function reaches here then it could not create player. raise error
+        raise
 
     # Asks human for action
     def _get_human_action(self: "PlayConnect4") -> int:
@@ -301,10 +311,11 @@ class PlayConnect4:
 
 
 def main() -> None:
+    config_handler = ConfigHandler()
     logger_handler = LoggerHandler()
     game_turn_handler = GameTurnHandler.GameTurnHandler()
     game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
-    playconnect4 = PlayConnect4(game, game_turn_handler, logger_handler)
+    playconnect4 = PlayConnect4(game, game_turn_handler, logger_handler, config_handler)
 
     playconnect4.setup_game()
     playconnect4.prepare_game()

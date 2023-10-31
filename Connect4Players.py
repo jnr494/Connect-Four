@@ -7,7 +7,7 @@ import numpy as np
 import MonteCarloTreeSearch
 from Connect4Game import Connect4
 from IPlayer import IPlayer
-
+from ConfigHandler import MCTSPlayerConfig
 
 class RandomPlayer(IPlayer):
     def __init__(self: "RandomPlayer") -> None:
@@ -42,54 +42,50 @@ class DQPlayer(IPlayer):
 
 class MCTSPlayer(IPlayer):
 
-    game: Connect4
-    player: int
-    next_player: int
-    max_count: int = 1e3
-    max_depth: int = 5
-    confidence_value: float = 2**2
-    rave_param: float | None = None
-    reuse_tree: bool = True
-    randomize_action: bool = False
+    _game: Connect4
+    _player: int
+    _next_player: int
+    _mcts_config: MCTSPlayerConfig
     winning_probability: float
-    random_player: RandomPlayer = RandomPlayer()
+    _random_player: RandomPlayer = RandomPlayer()
 
-    def __init__(self: "MCTSPlayer", game: Connect4, player: int, next_player: int) -> None:
-        self.game = game
-        self.player = player
-        self.next_player = next_player
+    def __init__(self: "MCTSPlayer", game: Connect4, player: int, next_player: int, mcts_config: MCTSPlayerConfig) -> None:
+        self._game = game
+        self._player = player
+        self._next_player = next_player
+        self._mcts_config = mcts_config
 
         self.reset()
 
     def make_action(self: "MCTSPlayer", game: Connect4, available_actions: list[int]) -> int:
-        self.game = game
+        self._game = game
         # important that env_state comes from game.
         best_action, tree, winning_probability = MonteCarloTreeSearch.MonteCarloTreeSearch(
-            self.game,
-            self.player,
-            self.next_player,
-            self.max_count,
-            self.max_depth,
-            self.confidence_value,
-            self.rave_param,
-            self.random_player,
-            self.tree,
+            self._game,
+            self._player,
+            self._next_player,
+            self._mcts_config.max_count,
+            self._mcts_config.max_depth,
+            self._mcts_config.confidence_value,
+            self._mcts_config.rave_param,
+            self._random_player,
+            self._tree,
         )
 
         self.winning_probability = winning_probability
 
-        if self.reuse_tree:
-            self.tree = tree
+        if self._mcts_config.reuse_tree:
+            self._tree = tree
 
-        if self.randomize_action:
+        if self._mcts_config.randomize_action:
             action_probabilities = MonteCarloTreeSearch.get_action_probabilities(self.game, tree, temperature=1)
-            action: int = np.random.Generator.choice(self.game.no_cols, p=action_probabilities)
+            action: int = np.random.Generator.choice(self._game.no_cols, p=action_probabilities)
             return (action, action_probabilities)
         else:
             return best_action
 
     def reset(self: "MCTSPlayer") -> None:
-        self.tree = None
+        self._tree = None
         self.winning_probability = None
 
     def get_optimal_actions_qvalues(self: "MCTSPlayer") -> Tuple[list, list, list, list]:

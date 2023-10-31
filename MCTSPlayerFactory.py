@@ -1,33 +1,30 @@
+
+import ConfigHandler
 from Connect4Game import Connect4
 from Connect4Players import MCTSPlayer
 
 
 class MCTSPlayerFactory:
     @staticmethod
-    def create_normal_player(game: Connect4, player: int, next_player: int) -> MCTSPlayer:
-        mctsplayer = MCTSPlayer(game, player, next_player)
-
-        mctsplayer.max_count = 5e2
-        mctsplayer.max_depth = 2
-
+    def create_player(
+        game: Connect4,
+        player: int,
+        next_player: int,
+        name: str,
+        config_handler: ConfigHandler,
+    ) -> MCTSPlayer:
+        # get config from config_handler based on inputted name
+        mctsplayer_config = ConfigHandler.MCTSPlayerConfig(config_handler, name)
+        # create mctsplayer using config and inputs
+        mctsplayer = MCTSPlayer(game, player, next_player, mctsplayer_config)
         return mctsplayer
 
-    @staticmethod
-    def create_hard_player(game: Connect4, player: int, next_player: int) -> MCTSPlayer:
-        mctsplayer = MCTSPlayer(game, player, next_player)
 
-        mctsplayer.max_count = 2e3
-        mctsplayer.max_depth = 5
-        mctsplayer.rave_param = 2**0
+class MCTSPlayerNames:
+    normal: str = "normal"
+    hard: str = "hard"
+    god: str = "god"
 
-        return mctsplayer
-
-    @staticmethod
-    def create_god_player(game: Connect4, player: int, next_player: int) -> MCTSPlayer:
-        mctsplayer = MCTSPlayer(game, player, next_player)
-
-        mctsplayer.max_count = 1e4
-        mctsplayer.max_depth = 100
-        mctsplayer.rave_param = 2**0
-
-        return mctsplayer
+if __name__ == "__main__":
+    a = MCTSPlayerNames.normal
+    print(a, type(a))
