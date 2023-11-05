@@ -1,4 +1,5 @@
 import copy
+import logging
 
 import numba
 import numpy as np
@@ -6,6 +7,7 @@ import numpy.typing as npt
 
 from Connect4Game import Connect4
 from IPlayer import IPlayer
+from LoggerHandler import LoggerHandler
 
 
 # class for handling gameplay
@@ -14,12 +16,15 @@ class Connect4GameHandler:
 
     actions: list[int]
     player_turns: list[int]
+    action_probabilities: list[float]
+    _logger:  logging.Logger
 
     def __init__(
         self: "Connect4GameHandler",
         game: Connect4,
         player0: IPlayer,
         player1: IPlayer,
+        logger_handler: LoggerHandler,
     ) -> None:
         self.game = game
         self.game_size = self.game.no_rows * self.game.no_cols
@@ -27,6 +32,8 @@ class Connect4GameHandler:
         self.players = [player0, player1]
         self.no_players = len(self.players)
         self.player_values = [1, -1]
+
+        self._logger = logger_handler.get_logger(type(self).__name__)
 
         self.reset_game()
 

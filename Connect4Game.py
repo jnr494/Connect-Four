@@ -1,4 +1,5 @@
 import copy
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numba
@@ -10,7 +11,7 @@ from GameTurnHandler import GameTurnHandler
 
 class Connect4:
     _game_turn_handler: GameTurnHandler
-    _winner: int
+    _winner: int | None
     _board: npt.NDArray[np.float64]
 
     def __init__(self: "Connect4", game: "Connect4" = None, game_turn_handler: GameTurnHandler = None) -> None:
@@ -44,7 +45,7 @@ class Connect4:
             update_winning_possibilities(self.get_board(), self.current_winning_possibilities[player], player, col, row)
             return False
 
-    def get_winner(self: "Connect4") -> int:
+    def get_winner(self: "Connect4") -> int | None:
         return self._winner
 
     def get_board(self: "Connect4") -> npt.NDArray[np.float64]:
@@ -56,7 +57,10 @@ class Connect4:
     def get_current_player(self: "Connect4") -> int:
         return self._game_turn_handler.get_current_player_value()
 
-    def reset(self: "Connect4", game: "Connect4" = None) -> None:
+    def get_current_player_turn(self: "Connect4") -> int:
+        return self._game_turn_handler.get_current_player_turn()
+
+    def reset(self: "Connect4", game: Optional["Connect4"] = None) -> None:
         if game is None:
             self._board = np.zeros((self.no_rows, self.no_cols))
             self.next_row_height = np.zeros((self.no_cols,), dtype=int)
@@ -117,7 +121,7 @@ class Connect4:
         else:
             return all_available_actions
 
-    def plot_board_state(self: "Connect4", board_state: npt.NDArray[np.float64] = None, update: bool = False) -> None:
+    def plot_board_state(self: "Connect4", board_state: Optional[npt.NDArray[np.float64]] = None, update: bool = False) -> None:
         if board_state is None:
             board_state = self.get_board()
 

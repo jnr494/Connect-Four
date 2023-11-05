@@ -45,6 +45,9 @@ class GameTurnHandler:
         new_game_handler = GameTurnHandler(self._player_values, self._current_player_turn)
         return new_game_handler
 
+    def get_current_player_turn(self: "GameTurnHandler") -> int:
+        return self._current_player_turn
+
 if __name__ == "__main__":
     game_turn_handler = GameTurnHandler([4, 5, 6, 7, 9], 3)
     print(
