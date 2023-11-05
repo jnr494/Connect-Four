@@ -45,6 +45,9 @@ class GameTurnHandler:
         new_game_handler = GameTurnHandler(self._player_values, self._current_player_turn)
         return new_game_handler
 
+    def reset(self: "GameTurnHandler") -> None:
+        self.setup(self._player_values, self._starting_position)
+
     def get_current_player_turn(self: "GameTurnHandler") -> int:
         return self._current_player_turn
 

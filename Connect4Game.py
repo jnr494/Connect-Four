@@ -14,15 +14,20 @@ class Connect4:
     _winner: int | None
     _board: npt.NDArray[np.float64]
 
-    def __init__(self: "Connect4", game: "Connect4" = None, game_turn_handler: GameTurnHandler = None) -> None:
+    def __init__(
+        self: "Connect4",
+        game: Optional["Connect4"] = None,
+        game_turn_handler: Optional[GameTurnHandler] = None,
+    ) -> None:
         self.no_rows = 6
         self.no_cols = 7
         self.blank_value = 0
-
         self.fig = None
-        self.reset(game=game)
 
-        self._game_turn_handler = game_turn_handler
+        if game_turn_handler is not None:
+            self._game_turn_handler = game_turn_handler
+
+        self.reset(game=game)
 
     def place_disc_using_turn_handler(self: "Connect4", col: int) -> bool:
         return self.place_disc(col, self._game_turn_handler.get_current_player_value())
@@ -69,6 +74,7 @@ class Connect4:
                 -1: np.zeros((self.no_rows, self.no_cols)),
             }
             self._winner = None
+            self._game_turn_handler.reset()
         else:
             self._board = copy.deepcopy(game.get_board())
             self.next_row_height = copy.deepcopy(game.next_row_height)
@@ -121,7 +127,9 @@ class Connect4:
         else:
             return all_available_actions
 
-    def plot_board_state(self: "Connect4", board_state: Optional[npt.NDArray[np.float64]] = None, update: bool = False) -> None:
+    def plot_board_state(
+        self: "Connect4", board_state: Optional[npt.NDArray[np.float64]] = None, update: bool = False
+    ) -> None:
         if board_state is None:
             board_state = self.get_board()
 
@@ -162,7 +170,11 @@ class Connect4:
 
 @numba.njit
 def update_winning_possibilities(
-    board: npt.NDArray[np.float64], current_possibilities: list[int], player: int, col: int, row: int,
+    board: npt.NDArray[np.float64],
+    current_possibilities: list[int],
+    player: int,
+    col: int,
+    row: int,
 ) -> None:
     max_rows, max_cols = board.shape
     # eight direction possibilities
@@ -211,9 +223,11 @@ def update_winning_possibilities(
 
 @numba.njit
 def find_available_winning_actions(
-    current_possibilities: list[int], next_row_heights: npt.ArrayLike, no_cols: int, no_rows: int,
+    current_possibilities: list[int],
+    next_row_heights: npt.ArrayLike,
+    no_cols: int,
+    no_rows: int,
 ) -> npt.ArrayLike:
-
     winning_actions = np.zeros(no_cols)  # formatted as vector of 0 or 1 (1 being winning move)
     for col, row in enumerate(next_row_heights):
         if row < no_rows and current_possibilities[row, col] == 1:
@@ -223,7 +237,10 @@ def find_available_winning_actions(
 
 @numba.njit
 def exclude_must_avoid_actions(
-    available_actions: list[int], current_foe_possibilities: list[int], next_row_heights: list[int], no_rows: int,
+    available_actions: list[int],
+    current_foe_possibilities: list[int],
+    next_row_heights: list[int],
+    no_rows: int,
 ) -> npt.ArrayLike:
     action_filter = np.ones(len(available_actions))  # formatted as vector of 0 or 1 (1 being winning move)
     for action in available_actions:

@@ -119,7 +119,7 @@ class PlayConnect4:
         human_start_wish_str: str
 
         time.sleep(0.25)
-        human_start_wish_str: str = self._question_to_human_player(
+        human_start_wish_str = self._question_to_human_player(
             "Do you wish to start? [yes,no]: ",
         )
 
@@ -222,24 +222,24 @@ class PlayConnect4:
     # Asks human for action
     def _get_human_action(self: "PlayConnect4") -> int:
         available_actions = self._game.get_available_actions()
-        available_actions = np.array(available_actions) + 1  # adjust for be 1-based
+        available_actions = list(np.array(available_actions) + 1)  # adjust for be 1-based
 
-        human_action = self._question_to_human_player(
+        human_action_str: str | None = self._question_to_human_player(
             "Your turn human. Choose a column to play " + str(available_actions) + ": ",
         )
 
         try:
-            human_action = int(human_action)
+            human_action = int(human_action_str)
         except ValueError:
             human_action = None
 
         # check if chosen action is valid
         while human_action not in available_actions:
-            human_action = self._question_to_human_player(
+            human_action_str = self._question_to_human_player(
                 "Choice not valid. Please choose a valid column " + str(available_actions) + ": ",
             )
             try:
-                human_action = int(human_action)
+                human_action = int(human_action_str)
             except ValueError:
                 human_action = None
 

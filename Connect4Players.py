@@ -45,7 +45,7 @@ class MCTSPlayer(IPlayer):
     _player: int
     _next_player: int
     _mcts_config: MCTSPlayerConfig
-    winning_probability: float
+    winning_probability: float | None
     _random_player: RandomPlayer = RandomPlayer()
 
     def __init__(
@@ -79,9 +79,9 @@ class MCTSPlayer(IPlayer):
             self._tree = tree
 
         if self._mcts_config.randomize_action:
-            action_probabilities = MonteCarloTreeSearch.get_action_probabilities(self.game, tree, temperature=1)
-            action: int = np.random.Generator.choice(self._game.no_cols, p=action_probabilities)
-            return (action, action_probabilities)
+            action_probabilities = MonteCarloTreeSearch.get_action_probabilities(self._game, tree, temperature=1)
+            action = np.random.choice(self._game.no_cols, p=action_probabilities)
+            return action
         else:
             return best_action
 
@@ -91,10 +91,10 @@ class MCTSPlayer(IPlayer):
 
     def get_optimal_actions_qvalues(self: "MCTSPlayer") -> Tuple[list, list, list, list]:
         best_actions, q_values, amaf_q_values, nodes = MonteCarloTreeSearch.get_optimal_tree_actions(
-            self.game,
-            self.tree,
-            self.player,
-            self.next_player,
+            self._game,
+            self._tree,
+            self._player,
+            self._next_player,
         )
         return best_actions, q_values, amaf_q_values, nodes
 

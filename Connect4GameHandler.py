@@ -1,10 +1,10 @@
-import copy
 import logging
 
 import numba
 import numpy as np
 import numpy.typing as npt
 
+import ConfigHandler
 from Connect4Game import Connect4
 from IPlayer import IPlayer
 from LoggerHandler import LoggerHandler
@@ -17,7 +17,8 @@ class Connect4GameHandler:
     actions: list[int]
     player_turns: list[int]
     action_probabilities: list[float]
-    _logger:  logging.Logger
+    _logger: logging.Logger
+    _config_handler: ConfigHandler.ConfigHandler
 
     def __init__(
         self: "Connect4GameHandler",
@@ -25,6 +26,7 @@ class Connect4GameHandler:
         player0: IPlayer,
         player1: IPlayer,
         logger_handler: LoggerHandler,
+        config_handler: ConfigHandler.ConfigHandler,
     ) -> None:
         self.game = game
         self.game_size = self.game.no_rows * self.game.no_cols
@@ -34,6 +36,7 @@ class Connect4GameHandler:
         self.player_values = [1, -1]
 
         self._logger = logger_handler.get_logger(type(self).__name__)
+        self._config_handler = config_handler
 
         self.reset_game()
 
@@ -56,73 +59,51 @@ class Connect4GameHandler:
     ) -> npt.NDArray[np.float64]:
         return adjust_board_state_numba(board_state, self.player_values[player_turn], self.game.no_cols, flip)
 
-    def adjust_action(self: "Connect4GameHandler", action: int, flipped_bool: int) -> None:
+    def adjust_action(self: "Connect4GameHandler", action: int, flipped_bool: int) -> int:
         if flipped_bool:
             action = (action - (self.game.no_cols - 1)) * (-1)
         return action
 
-    def play_game(
-        self: "Connect4GameHandler",
-        player_turn: "int" = 0,
-        plot_primo_states: bool = False,
-        flip: bool = False,
-    ) -> None:
-        for _ in range(self.game_size):
-            # plot board state if enabled
-            if plot_primo_states:
-                self.game.plot_board_state()
-
-            # get player value and next player turn
-            current_player_value = self.player_values[player_turn]
-            next_player_turn = (player_turn + 1) % self.no_players
-            next_player_value = self.player_values[next_player_turn]
-
-            # update player turns
-            self.player_turns.append(current_player_value)
-
-            # get board state
-            # board_state, flipped_bool = self.adjust_board_state(self.game.get_board(), player_turn, flip)
+    def play_game(self: "Connect4GameHandler") -> None:
+        for round in range(self.game_size):
+            current_player_turn = self.game.get_current_player_turn()
 
             # get available (clever) actions
-            # clever_available_actions = self.adjust_action(self.game.get_clever_available_actions(current_player_value,next_player_value),flipped_bool)
-            clever_available_actions = self.game.get_clever_available_actions(current_player_value, next_player_value)
+            clever_available_actions = self.game.get_clever_available_actions_using_turn_handler()
+
             # get new action
-            new_action = self.players[player_turn].make_action(self.game, clever_available_actions)
-
-            # save action probabilities (only if new_action is tuple)
-            if type(new_action) is tuple:
-                self.action_probabilities.append(new_action[1])
-                new_action = new_action[0]
-            else:
-                self.action_probabilities.append(None)
-
-            # adjust and save action
-            # new_action = self.adjust_action(new_action, flipped_bool)
-            self.actions.append(new_action)
-
-            # perform new action and save state
-            is_game_won = self.game.place_disc(new_action, current_player_value)
-            self.states.append(copy.deepcopy(self.game.get_board()))
+            action = self.players[current_player_turn].make_action(self.game, clever_available_actions)
+            self._logger.debug(
+                f"Round {round}: player={self.game.get_current_player()} made action={action} with available actions={clever_available_actions}.",
+            )
+            # perform new action
+            is_game_won = self.game.place_disc_using_turn_handler(action)
 
             # check if game is done
-            # is_game_won = self.game.check_four_in_a_row(new_action,new_row_height,current_player_value)
             if is_game_won:
-                self.winner = self.game.winner
                 break
 
             # update player turn
-            player_turn = next_player_turn
+            self.game.next_turn()
 
-    def play_n_games(self: "Connect4GameHandler", no_games: int, plot: bool = False, flip: bool = False) -> list[int]:
-        player_turn = 0
-        winners = []
+    def play_n_games(self: "Connect4GameHandler", no_games: int, plot: bool = False) -> list[int]:
+        winners: list[int] = []
 
-        for _ in range(no_games):
-            print("Game ", _)
+        for game_number in range(no_games):
+            self._logger.debug(f"Game {game_number} starting.")
+
             self.reset_game()
-            self.play_game(player_turn, flip=flip)
-            winners.append(self.winner)
-            player_turn = (player_turn + 1) % 2
+
+            for _ in range(game_number % self.no_players):
+                self.game.next_turn()
+
+            self.play_game()
+
+            winner = self.game.get_winner()
+            self._logger.debug(f"Game  {game_number}: was won by player: {winner}.")
+            winner = winner if winner is not None else 0
+            winners.append(winner)
+
             if plot:
                 self.game.plot_board_state()
         return winners
@@ -154,3 +135,19 @@ def adjust_board_state_numba(
         flipped_bool = False
 
     return board_state, flipped_bool
+
+
+if __name__ == "__main__":
+    import Connect4Players
+    import GameTurnHandler
+    import MCTSPlayerFactory
+
+    config_handler = ConfigHandler.ConfigHandler()
+    logger_handler = LoggerHandler(config_handler)
+    game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
+    game = Connect4(game_turn_handler=game_turn_handler)
+    player0 = Connect4Players.RandomPlayer()
+    player1 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, -1, 1, "normal", config_handler)
+    game_handler = Connect4GameHandler(game, player0, player1, logger_handler, config_handler)
+    winners = game_handler.play_n_games(10)
+    print(np.average(winners))
