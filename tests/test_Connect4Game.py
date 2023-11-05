@@ -11,7 +11,7 @@ class Connect4GameTests(unittest.TestCase):
         game = Connect4()
 
         # Assert board is array of zeros of correct size
-        self.assertEqual(np.array_equal(game.Board, np.zeros((game.no_rows, game.no_cols))), True)
+        self.assertEqual(np.array_equal(game.get_board(), np.zeros((game.no_rows, game.no_cols))), True)
 
     def test_place_discs(self: "Connect4GameTests") -> None:
         game_turn_handler = GameTurnHandler([1, -1])
@@ -30,10 +30,10 @@ class Connect4GameTests(unittest.TestCase):
         game.place_disc_using_turn_handler(6)
         self.assertIsNone(game._winner)
 
-        self.assertEqual(game.Board[0, 3], 1)
-        self.assertEqual(game.Board[1, 3], -1)
-        self.assertEqual(game.Board[0, 0], 1)
-        self.assertEqual(game.Board[0, 6], -1)
+        self.assertEqual(game.get_board()[0, 3], 1)
+        self.assertEqual(game.get_board()[1, 3], -1)
+        self.assertEqual(game.get_board()[0, 0], 1)
+        self.assertEqual(game.get_board()[0, 6], -1)
 
     def test_simple_win(self: "Connect4GameTests") -> None:
         game_turn_handler = GameTurnHandler([1, -1])
@@ -72,10 +72,10 @@ class Connect4GameTests(unittest.TestCase):
         game_copy.place_disc_using_turn_handler(3)
         game_copy.next_turn()
 
-        self.assertEqual(game.Board[0, 3], 1)
-        self.assertEqual(game.Board[1, 3], 0)
+        self.assertEqual(game.get_board()[0, 3], 1)
+        self.assertEqual(game.get_board()[1, 3], 0)
         self.assertEqual(game.get_current_player(), -1)
 
-        self.assertEqual(game_copy.Board[0, 3], 1)
-        self.assertEqual(game_copy.Board[1, 3], -1)
+        self.assertEqual(game_copy.get_board()[0, 3], 1)
+        self.assertEqual(game_copy.get_board()[1, 3], -1)
         self.assertEqual(game_copy.get_current_player(), 1)

@@ -175,7 +175,7 @@ def get_optimal_action_and_next_state_hash(node: dict, max_bool: bool):
 
 
 def get_action_probabilities(game, tree, temperature=1):
-    start_state_hash = hash(game.Board.tobytes())
+    start_state_hash = hash(game.get_board().tobytes())
     current_node = tree.get_node(start_state_hash)
     no_visits = np.zeros(game.no_cols)
     no_visits[current_node["actions"]] = current_node["no_visits_actions"]
@@ -184,7 +184,7 @@ def get_action_probabilities(game, tree, temperature=1):
 
 
 def get_optimal_tree_actions(game: Connect4Game.Connect4, tree: Tree, player: int, next_player: int):
-    start_state_hash = hash(game.Board.tobytes())
+    start_state_hash = hash(game.get_board().tobytes())
     current_node = tree.get_node(start_state_hash)
 
     players = [player, next_player]
@@ -230,7 +230,7 @@ def MonteCarloTreeSearch(
         tree = Tree()
 
     if evaluator is None:
-        no_cols = game.Board.shape[1]
+        no_cols = game.get_board().shape[1]
         evaluator = lambda board: (np.zeros(no_cols) + 1 / no_cols, 0.5)  # noqa: E731
 
     use_rave = rave_param is not None
@@ -253,7 +253,7 @@ def MonteCarloTreeSearch(
         while (not terminal_bool) and len(visited_state_hashes) <= max_depth:
             next_player_turn = (player_turn + 1) % 2
 
-            current_state_hash = hash(game_copy.Board.tobytes())
+            current_state_hash = hash(game_copy.get_board().tobytes())
             visited_state_hashes.append(current_state_hash)
             no_visited_states = len(visited_state_hashes)
 
@@ -264,7 +264,7 @@ def MonteCarloTreeSearch(
                     players[next_player_turn],
                 )
                 # find priors and win_prediction from evaluator
-                priors, win_prediction = evaluator(game_copy.Board)
+                priors, win_prediction = evaluator(game_copy.get_board())
                 filtered_priors = priors[clever_available_actions]
                 filtered_priors = filtered_priors / sum(filtered_priors)
 
@@ -313,7 +313,7 @@ def MonteCarloTreeSearch(
                     players[next_player_turn],
                 )
                 # get and simulate action
-                sim_action = rollout_player.make_action(game_copy.Board, clever_available_actions)
+                sim_action = rollout_player.make_action(game_copy.get_board(), clever_available_actions)
                 actions.append(sim_action)
                 new_row_heights.append(game.next_row_height[sim_action])
                 game_copy.place_disc(sim_action, players[player_turn])

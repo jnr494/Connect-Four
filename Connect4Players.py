@@ -31,7 +31,7 @@ class DQPlayer(IPlayer):
         if uniform < self.epsilon:
             return self.RandomPlayer.make_action(game, available_actions)
         else:
-            q_values = self.QModel.predict(np.expand_dims(game.Board.flatten(), axis=0))
+            q_values = self.QModel.predict(np.expand_dims(game.get_board().flatten(), axis=0))
             q_values_available = q_values[0, available_actions]
             action = available_actions[np.argmax(q_values_available)]
             return action

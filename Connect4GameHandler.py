@@ -34,7 +34,7 @@ class Connect4GameHandler:
         self.game.reset()
         # variables to save game states and actions
         self.actions = []
-        self.states = [self.game.Board]
+        self.states = [self.game.get_board()]
         self.player_turns = []
         self.action_probabilities = []
         self.winner = 0
@@ -74,7 +74,7 @@ class Connect4GameHandler:
             self.player_turns.append(current_player_value)
 
             # get board state
-            # board_state, flipped_bool = self.adjust_board_state(self.game.Board, player_turn, flip)
+            # board_state, flipped_bool = self.adjust_board_state(self.game.get_board(), player_turn, flip)
 
             # get available (clever) actions
             # clever_available_actions = self.adjust_action(self.game.get_clever_available_actions(current_player_value,next_player_value),flipped_bool)
@@ -95,7 +95,7 @@ class Connect4GameHandler:
 
             # perform new action and save state
             is_game_won = self.game.place_disc(new_action, current_player_value)
-            self.states.append(copy.deepcopy(self.game.Board))
+            self.states.append(copy.deepcopy(self.game.get_board()))
 
             # check if game is done
             # is_game_won = self.game.check_four_in_a_row(new_action,new_row_height,current_player_value)
