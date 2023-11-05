@@ -11,6 +11,7 @@ from GameTurnHandler import GameTurnHandler
 class Connect4:
     _game_turn_handler: GameTurnHandler
     _winner: int
+    _board: npt.NDArray[np.float64]
 
     def __init__(self: "Connect4", game: "Connect4" = None, game_turn_handler: GameTurnHandler = None) -> None:
         self.no_rows = 6
@@ -28,7 +29,7 @@ class Connect4:
     def place_disc(self: "Connect4", col: int, player: int) -> bool:
         # place disc
         row = self.next_row_height[col]
-        self.Board[row, col] = player
+        self._board[row, col] = player
         # update next_row_height
         self.next_row_height[col] += 1
 
@@ -47,7 +48,7 @@ class Connect4:
         return self._winner
 
     def get_board(self: "Connect4") -> npt.NDArray[np.float64]:
-        return self.Board
+        return self._board
 
     def next_turn(self: "Connect4") -> None:
         self._game_turn_handler.next_turn()
@@ -57,7 +58,7 @@ class Connect4:
 
     def reset(self: "Connect4", game: "Connect4" = None) -> None:
         if game is None:
-            self.Board = np.zeros((self.no_rows, self.no_cols))
+            self._board = np.zeros((self.no_rows, self.no_cols))
             self.next_row_height = np.zeros((self.no_cols,), dtype=int)
             self.current_winning_possibilities = {
                 1: np.zeros((self.no_rows, self.no_cols)),
@@ -65,7 +66,7 @@ class Connect4:
             }
             self._winner = None
         else:
-            self.Board = copy.deepcopy(game.get_board())
+            self._board = copy.deepcopy(game.get_board())
             self.next_row_height = copy.deepcopy(game.next_row_height)
             self.current_winning_possibilities = copy.deepcopy(game.current_winning_possibilities)
             self._winner = game._winner

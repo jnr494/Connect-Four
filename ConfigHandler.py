@@ -87,9 +87,25 @@ class MCTSPlayerConfig:
         self.randomize_action = randomize_action
 
 
+class LoggerConfig:
+    log_path: str
+    log_level: str
+    log_level_default: str
+
+    def __init__(self: "LoggerConfig", config_handler: ConfigHandler, name: str) -> None:
+        config_section: str = "log"
+
+        # Get configs from config_handler
+        self.log_path = config_handler.get_config(config_section, "log_path")
+        self.log_level = config_handler.get_config(config_section, f"loglevel_{name.lower()}").upper()
+        self.log_level_default = config_handler.get_config(config_section, "loglevel_default").upper()
+
+
 if __name__ == "__main__":
     config_handler = ConfigHandler()
     sections = config_handler.get_sections()
     print(sections)
     player = MCTSPlayerConfig(config_handler, "normal")
     print(player)
+    logger_config = LoggerConfig(config_handler, "playconnect4")
+    print(logger_config)

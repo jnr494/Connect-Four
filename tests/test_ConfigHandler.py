@@ -30,3 +30,12 @@ class ConfigHandlerTests(unittest.TestCase):
         # compare hard and god player
         self.assertGreater(god_player.max_count, hard_player.max_count)
         self.assertGreater(god_player.max_depth, hard_player.max_depth)
+
+    def test_logger_config(self: "ConfigHandlerTests") -> None:
+        config_handler = ConfigHandler.ConfigHandler()
+        logger_config = ConfigHandler.LoggerConfig(config_handler, type(self).__name__)
+
+        #compare logger_config to expected values
+        self.assertEqual(logger_config.log_path, "logs/Connect4.log")
+        self.assertEqual(logger_config.log_level, "INFORMATION")
+        self.assertEqual(logger_config.log_level_default, "DEBUG")

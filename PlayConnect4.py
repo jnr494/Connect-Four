@@ -34,7 +34,7 @@ class PlayConnect4:
     ) -> None:
         self._game = game
         self._game_turn_handler = game_turn_handler
-        self._logger = logger_handler.get_playconnect4_logger()
+        self._logger = logger_handler.get_logger(type(self).__name__)
         self._config_handler = config_handler
 
     def setup_game(self: "PlayConnect4") -> None:
@@ -312,7 +312,7 @@ class PlayConnect4:
 
 def main() -> None:
     config_handler = ConfigHandler()
-    logger_handler = LoggerHandler()
+    logger_handler = LoggerHandler(config_handler)
     game_turn_handler = GameTurnHandler.GameTurnHandler()
     game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
     playconnect4 = PlayConnect4(game, game_turn_handler, logger_handler, config_handler)

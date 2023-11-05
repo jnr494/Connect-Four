@@ -1,13 +1,13 @@
-
 from typing import Tuple
 
 import numba
 import numpy as np
 
 import MonteCarloTreeSearch
+from ConfigHandler import MCTSPlayerConfig
 from Connect4Game import Connect4
 from IPlayer import IPlayer
-from ConfigHandler import MCTSPlayerConfig
+
 
 class RandomPlayer(IPlayer):
     def __init__(self: "RandomPlayer") -> None:
@@ -41,7 +41,6 @@ class DQPlayer(IPlayer):
 
 
 class MCTSPlayer(IPlayer):
-
     _game: Connect4
     _player: int
     _next_player: int
@@ -49,7 +48,9 @@ class MCTSPlayer(IPlayer):
     winning_probability: float
     _random_player: RandomPlayer = RandomPlayer()
 
-    def __init__(self: "MCTSPlayer", game: Connect4, player: int, next_player: int, mcts_config: MCTSPlayerConfig) -> None:
+    def __init__(
+        self: "MCTSPlayer", game: Connect4, player: int, next_player: int, mcts_config: MCTSPlayerConfig,
+    ) -> None:
         self._game = game
         self._player = player
         self._next_player = next_player

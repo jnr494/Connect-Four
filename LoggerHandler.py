@@ -1,17 +1,29 @@
 import logging
 
+import ConfigHandler
+
 
 class LoggerHandler:
-    def get_playconnect4_logger(self: "LoggerHandler") -> logging.Logger:
-        logger = logging.getLogger("PlayConnect4")
-        logger.setLevel(logging.DEBUG)
+    _config_handler: ConfigHandler.ConfigHandler
+
+    def __init__(self: "LoggerHandler ", config_handler: ConfigHandler.ConfigHandler) -> None:
+        self._config_handler = config_handler
+
+    def _get_logger_config(self: "LoggerHandler", name: str) -> ConfigHandler.LoggerConfig:
+        return ConfigHandler.LoggerConfig(self._config_handler, name)
+
+    def get_logger(self: "LoggerHandler", name: str) -> logging.Logger:
+        logger_config = self._get_logger_config(name)
+
+        logger = logging.getLogger(name)
+        logger.setLevel(logger_config.log_level_default)
 
         if logger.hasHandlers():
             return logger
 
         # Create handlers
-        file_handler = logging.FileHandler("logs/Connect4.log")
-        file_handler.setLevel(logging.DEBUG)
+        file_handler = logging.FileHandler(logger_config.log_path)
+        file_handler.setLevel(logger_config.log_level)
 
         # Create formatters and add it to handlers
         file_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
