@@ -18,7 +18,7 @@ class Connect4:
         self.blank_value = 0
 
         self.fig = None
-        self.reset(game)
+        self.reset(game=game)
 
         self._game_turn_handler = game_turn_handler
 

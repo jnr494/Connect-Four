@@ -10,7 +10,7 @@ class LoggerHandler:
             return logger
 
         # Create handlers
-        file_handler = logging.FileHandler("logs/PlayConnect4.log")
+        file_handler = logging.FileHandler("logs/Connect4.log")
         file_handler.setLevel(logging.DEBUG)
 
         # Create formatters and add it to handlers
