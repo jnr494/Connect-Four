@@ -1,9 +1,10 @@
 import unittest
 
 import Connect4Game
+import GameTurnHandler
 from ConfigHandler import ConfigHandler
 from MCTSPlayerFactory import MCTSPlayerFactory, MCTSPlayerNames
-import GameTurnHandler
+
 
 class MCTSPlayerFactoryTests(unittest.TestCase):
     def test_creation_of_normal_player(self: "MCTSPlayerFactoryTests") -> None:

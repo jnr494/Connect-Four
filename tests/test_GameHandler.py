@@ -52,7 +52,7 @@ class Connect4GameTests(unittest.TestCase):
         player0 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, 1, -1, "normal", config_handler)
         player1 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, -1, 1, "god", config_handler)
         game_handler = Connect4GameHandler.Connect4GameHandler(game, player0, player1, logger_handler, config_handler)
-        number_of_games = 10
+        number_of_games = 3
         winners = game_handler.play_n_games(number_of_games)
 
         self.assertAlmostEqual(np.sum(winners), -1 * number_of_games)

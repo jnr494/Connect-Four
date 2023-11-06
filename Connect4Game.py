@@ -22,7 +22,7 @@ class Connect4:
         self.no_rows = 6
         self.no_cols = 7
         self.blank_value = 0
-        self.fig = None
+        self.fig: plt.Figure | None = None
 
         if game_turn_handler is not None:
             self._game_turn_handler = game_turn_handler
@@ -173,7 +173,7 @@ class Connect4:
 @numba.njit
 def update_winning_possibilities(
     board: npt.NDArray[np.float64],
-    current_possibilities: list[int],
+    current_possibilities: npt.NDArray[np.float64],
     player: int,
     col: int,
     row: int,
@@ -225,8 +225,8 @@ def update_winning_possibilities(
 
 @numba.njit
 def find_available_winning_actions(
-    current_possibilities: list[int],
-    next_row_heights: npt.ArrayLike,
+    current_possibilities: npt.NDArray[np.float64],
+    next_row_heights: list[int],
     no_cols: int,
     no_rows: int,
 ) -> npt.ArrayLike:
@@ -240,7 +240,7 @@ def find_available_winning_actions(
 @numba.njit
 def exclude_must_avoid_actions(
     available_actions: list[int],
-    current_foe_possibilities: list[int],
+    current_foe_possibilities: npt.NDArray[np.float64],
     next_row_heights: list[int],
     no_rows: int,
 ) -> npt.ArrayLike:
@@ -253,7 +253,7 @@ def exclude_must_avoid_actions(
 
 
 @numba.njit
-def get_available_actions_numba(board: npt.ArrayLike) -> npt.ArrayLike:
+def get_available_actions_numba(board: npt.NDArray[np.float64]) -> npt.ArrayLike:
     board_top_row = board[-1, :]
     available_actions = np.where(board_top_row == 0)[0]
     return available_actions
