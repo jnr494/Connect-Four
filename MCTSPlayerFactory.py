@@ -1,8 +1,8 @@
-
 import ConfigHandler
 from Connect4Game import Connect4
 from Connect4Players import MCTSPlayer
 from LoggerHandler import LoggerHandler
+
 
 class MCTSPlayerFactory:
     @staticmethod
@@ -25,6 +25,7 @@ class MCTSPlayerNames:
     normal: str = "normal"
     hard: str = "hard"
     god: str = "god"
+
 
 if __name__ == "__main__":
     a = MCTSPlayerNames.normal

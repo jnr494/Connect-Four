@@ -47,6 +47,7 @@ class ConfigTypeConverter:
 
 
 class MCTSPlayerConfig:
+    name: str
     max_count: int | None
     max_depth: int | None
     confidence_value: float | None = 4
@@ -79,6 +80,7 @@ class MCTSPlayerConfig:
         )
 
         # Convert config type and set
+        self.name = name
         self.max_count = ConfigTypeConverter.to_int(max_count)
         self.max_depth = ConfigTypeConverter.to_int(max_depth)
         self.confidence_value = ConfigTypeConverter.to_float(confidence_value)

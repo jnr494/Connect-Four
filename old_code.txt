@@ -1,0 +1,43 @@
+"""
+This section is from Connect4GameHandler.py
+"""
+
+@numba.njit
+def adjust_board_state_numba(
+    board_state: npt.NDArray[np.float64],
+    player_value: int,
+    no_cols: int,
+    flip: bool,
+) -> npt.NDArray[np.float64]:
+    board_state = board_state * player_value  # TODO improve this. adjust board so player is always 1 and opponent -1
+
+    if flip:
+        # flip board so most discs are on the left side
+        half_no_cols = int(no_cols / 2)
+        no_discs_left_side = np.count_nonzero(board_state[:, :half_no_cols])
+        no_discs_right_side = np.count_nonzero(board_state[:, -half_no_cols:])
+        if no_discs_right_side > no_discs_left_side:
+            board_state = np.fliplr(board_state)
+            flipped_bool = True
+        else:
+            flipped_bool = False
+    else:
+        flipped_bool = False
+
+    return board_state, flipped_bool
+
+def save_data(self: "Connect4GameHandler") -> None:
+    pass
+
+def adjust_board_state(
+    self: "Connect4GameHandler",
+    board_state: npt.NDArray[np.float64],
+    player_turn: int,
+    flip: bool,
+) -> npt.NDArray[np.float64]:
+    return adjust_board_state_numba(board_state, self.player_values[player_turn], self.game.no_cols, flip)
+
+def adjust_action(self: "Connect4GameHandler", action: int, flipped_bool: int) -> int:
+    if flipped_bool:
+        action = (action - (self.game.no_cols - 1)) * (-1)
+    return action

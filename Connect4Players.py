@@ -86,7 +86,7 @@ class MCTSPlayer(IPlayer):
         self.winning_probability = winning_probability
         if self.winning_probability is not None:
             self._logger.debug(
-                f"Best action=[{best_action}] has estimated probability of winning [{round(self.winning_probability*100,2)}%]",
+                f"Name=[{self._mcts_config.name}] found best action=[{best_action}] has estimated probability of winning [{round(self.winning_probability*100,2)}%]",
             )
 
         if self._mcts_config.reuse_tree:
