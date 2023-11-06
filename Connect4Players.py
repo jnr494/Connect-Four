@@ -15,7 +15,7 @@ class RandomPlayer(IPlayer):
     _name: str
 
     def __init__(self: "RandomPlayer") -> None:
-        self._name = "Random"
+        self._name = "random"
 
     def make_action(self: "RandomPlayer", game: Connect4, available_actions: list[int]) -> int:
         return make_random_choice(available_actions)
