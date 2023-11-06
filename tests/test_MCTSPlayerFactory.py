@@ -3,11 +3,12 @@ import unittest
 import Connect4Game
 from ConfigHandler import ConfigHandler
 from MCTSPlayerFactory import MCTSPlayerFactory, MCTSPlayerNames
-
+import GameTurnHandler
 
 class MCTSPlayerFactoryTests(unittest.TestCase):
     def test_creation_of_normal_player(self: "MCTSPlayerFactoryTests") -> None:
-        game = Connect4Game.Connect4()
+        game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
+        game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
         config_handler = ConfigHandler()
         player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.normal, config_handler)
         available_actions = game.get_available_actions()
@@ -20,7 +21,8 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
 
 
     def test_creation_of_hard_player(self: "MCTSPlayerFactoryTests") -> None:
-        game = Connect4Game.Connect4()
+        game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
+        game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
         config_handler = ConfigHandler()
         player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.hard, config_handler)
         available_actions = game.get_available_actions()
@@ -29,7 +31,8 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
         self.assertGreaterEqual(player.winning_probability, 0.5)
 
     def test_creation_of_god_player(self: "MCTSPlayerFactoryTests") -> None:
-        game = Connect4Game.Connect4()
+        game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
+        game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
         config_handler = ConfigHandler()
         player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.god, config_handler)
         available_actions = game.get_available_actions()
@@ -38,7 +41,8 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
         self.assertGreaterEqual(player.winning_probability, 0.5)
 
     def test_mcts_player_reset(self: "MCTSPlayerFactoryTests") -> None:
-        game = Connect4Game.Connect4()
+        game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
+        game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
         config_handler = ConfigHandler()
         player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.normal, config_handler)
         available_actions = game.get_available_actions()

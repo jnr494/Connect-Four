@@ -74,12 +74,14 @@ class Connect4:
                 -1: np.zeros((self.no_rows, self.no_cols)),
             }
             self._winner = None
-            self._game_turn_handler.reset()
+            if hasattr(self,"_game_turn_handler"):
+                self._game_turn_handler.reset()
         else:
             self._board = copy.deepcopy(game.get_board())
             self.next_row_height = copy.deepcopy(game.next_row_height)
             self.current_winning_possibilities = copy.deepcopy(game.current_winning_possibilities)
             self._winner = game._winner
+            self._game_turn_handler = game.get_turn_handler().copy()
 
     def get_turn_handler(self: "Connect4") -> GameTurnHandler:
         return self._game_turn_handler

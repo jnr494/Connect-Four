@@ -27,7 +27,7 @@ class ConfigHandler:
 
         return config
 
-    def get_config_boolean_or_alternative(self: "ConfigHandler", section: str, default_section: str, key: str) -> str:
+    def get_config_boolean_or_alternative(self: "ConfigHandler", section: str, default_section: str, key: str) -> bool:
         config = self.get_config_boolean(section, key)
 
         if config is None:
@@ -38,19 +38,19 @@ class ConfigHandler:
 
 class ConfigTypeConverter:
     @staticmethod
-    def to_int(config: str) -> int:
+    def to_int(config: str) -> int | None:
         return int(float(config)) if config != "None" else None
 
     @staticmethod
-    def to_float(config: str) -> int:
+    def to_float(config: str) -> float | None:
         return float(config) if config != "None" else None
 
 
 class MCTSPlayerConfig:
-    max_count: int
-    max_depth: int
-    confidence_value: float = 4
-    rave_param: float
+    max_count: int | None
+    max_depth: int | None
+    confidence_value: float | None = 4
+    rave_param: float | None
     reuse_tree: bool
     randomize_action: bool
 
