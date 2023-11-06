@@ -20,7 +20,7 @@ class Connect4GameTests(unittest.TestCase):
         game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
 
         player0 = Connect4Players.RandomPlayer()
-        player1 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, -1, 1, "normal", config_handler)
+        player1 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, -1, 1, "normal", config_handler, logger_handler)
         game_handler = Connect4GameHandler.Connect4GameHandler(game, player0, player1, logger_handler, config_handler)
         number_of_games = 10
         winners = game_handler.play_n_games(number_of_games)
@@ -34,8 +34,8 @@ class Connect4GameTests(unittest.TestCase):
         game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
         game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
 
-        player0 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, 1, -1, "normal", config_handler)
-        player1 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, -1, 1, "god", config_handler)
+        player0 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, 1, -1, "normal", config_handler, logger_handler)
+        player1 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, -1, 1, "god", config_handler, logger_handler)
         game_handler = Connect4GameHandler.Connect4GameHandler(game, player0, player1, logger_handler, config_handler)
         number_of_games = 10
         winners = game_handler.play_n_games(number_of_games)
@@ -49,8 +49,8 @@ class Connect4GameTests(unittest.TestCase):
         game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
         game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
 
-        player0 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, 1, -1, "normal", config_handler)
-        player1 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, -1, 1, "god", config_handler)
+        player0 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, 1, -1, "normal", config_handler, logger_handler)
+        player1 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, -1, 1, "god", config_handler, logger_handler)
         game_handler = Connect4GameHandler.Connect4GameHandler(game, player0, player1, logger_handler, config_handler)
         number_of_games = 3
         winners = game_handler.play_n_games(number_of_games)

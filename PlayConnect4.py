@@ -23,6 +23,7 @@ class PlayConnect4:
     _quick_start: bool = False
     _debug: bool = False
     _logger: logging.Logger
+    _logger_handler: LoggerHandler
     player: IPlayer
 
     def __init__(
@@ -34,7 +35,8 @@ class PlayConnect4:
     ) -> None:
         self._game = game
         self._game_turn_handler = game_turn_handler
-        self._logger = logger_handler.get_logger(type(self).__name__)
+        self._logger_handler = logger_handler
+        self._logger = self._logger_handler.get_logger(type(self).__name__)
         self._config_handler = config_handler
 
     def setup_game(self: "PlayConnect4") -> None:
@@ -213,6 +215,7 @@ class PlayConnect4:
                 next_player=self.human_color_wish,
                 name=mcts_player_name,
                 config_handler=self._config_handler,
+                logger_handler=self._logger_handler,
             )
             return
 

@@ -34,9 +34,3 @@ class LoggerHandler:
 
         return logger
 
-
-if __name__ == "__main__":
-    logger_handler = LoggerHandler()
-    logger = logger_handler.get_playconnect4_logger()
-    logger.info("info test")
-    logger.debug("debug test")

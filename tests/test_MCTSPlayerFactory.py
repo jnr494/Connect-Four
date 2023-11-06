@@ -4,14 +4,15 @@ import Connect4Game
 import GameTurnHandler
 from ConfigHandler import ConfigHandler
 from MCTSPlayerFactory import MCTSPlayerFactory, MCTSPlayerNames
-
+from LoggerHandler import LoggerHandler
 
 class MCTSPlayerFactoryTests(unittest.TestCase):
     def test_creation_of_normal_player(self: "MCTSPlayerFactoryTests") -> None:
         game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
         game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
         config_handler = ConfigHandler()
-        player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.normal, config_handler)
+        logger_handler = LoggerHandler(config_handler)
+        player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.normal, config_handler, logger_handler)
         available_actions = game.get_available_actions()
         action = player.make_action(game, available_actions)
         self.assertIn(action, available_actions)
@@ -25,7 +26,8 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
         game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
         game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
         config_handler = ConfigHandler()
-        player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.hard, config_handler)
+        logger_handler = LoggerHandler(config_handler)
+        player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.hard, config_handler, logger_handler)
         available_actions = game.get_available_actions()
         action = player.make_action(game, available_actions)
         self.assertIn(action, available_actions)
@@ -35,7 +37,8 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
         game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
         game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
         config_handler = ConfigHandler()
-        player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.god, config_handler)
+        logger_handler = LoggerHandler(config_handler)
+        player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.god, config_handler, logger_handler)
         available_actions = game.get_available_actions()
         action = player.make_action(game, available_actions)
         self.assertIn(action, available_actions)
@@ -45,7 +48,8 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
         game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
         game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
         config_handler = ConfigHandler()
-        player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.normal, config_handler)
+        logger_handler = LoggerHandler(config_handler)
+        player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.normal, config_handler, logger_handler)
         available_actions = game.get_available_actions()
         _ = player.make_action(game, available_actions)
         player.reset()

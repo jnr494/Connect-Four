@@ -74,7 +74,7 @@ class Connect4GameHandler:
             # get new action
             action = self.players[current_player_turn].make_action(self.game, clever_available_actions)
             self._logger.debug(
-                f"Round {round}: player={self.game.get_current_player()} made action={action} with available actions={clever_available_actions}.",
+                f"Round [{round}]: player=[{self.game.get_current_player()}] made action={action} with available actions={clever_available_actions}.",
             )
             # perform new action
             is_game_won = self.game.place_disc_using_turn_handler(action)
@@ -90,7 +90,7 @@ class Connect4GameHandler:
         winners: list[int] = []
 
         for game_number in range(no_games):
-            self._logger.debug(f"Game {game_number} starting.")
+            self._logger.debug(f"Game [{game_number}] starting.")
 
             self.reset_game()
 
@@ -100,7 +100,7 @@ class Connect4GameHandler:
             self.play_game()
 
             winner = self.game.get_winner()
-            self._logger.debug(f"Game  {game_number}: was won by player: {winner}.")
+            self._logger.debug(f"Game  [{game_number}]: was won by player: [{winner}].")
             winner = winner if winner is not None else 0
             winners.append(winner)
 
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
     game = Connect4(game_turn_handler=game_turn_handler)
     player0 = Connect4Players.RandomPlayer()
-    player1 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, -1, 1, "normal", config_handler)
+    player1 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, -1, 1, "normal", config_handler, logger_handler)
     game_handler = Connect4GameHandler(game, player0, player1, logger_handler, config_handler)
     winners = game_handler.play_n_games(10)
     print(np.average(winners))

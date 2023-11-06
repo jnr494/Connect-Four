@@ -1,3 +1,4 @@
+import logging
 from typing import Tuple
 
 import numba
@@ -7,13 +8,14 @@ import MonteCarloTreeSearch
 from ConfigHandler import MCTSPlayerConfig
 from Connect4Game import Connect4
 from IPlayer import IPlayer
+from LoggerHandler import LoggerHandler
 
 
 class RandomPlayer(IPlayer):
     def __init__(self: "RandomPlayer") -> None:
         pass
 
-    def make_action(self: "RandomPlayer", game: Connect4, available_actions: list[int]) -> None:
+    def make_action(self: "RandomPlayer", game: Connect4, available_actions: list[int]) -> int:
         return make_random_choice(available_actions)
 
     def reset(self: "RandomPlayer") -> None:
@@ -47,14 +49,22 @@ class MCTSPlayer(IPlayer):
     _mcts_config: MCTSPlayerConfig
     winning_probability: float | None
     _random_player: RandomPlayer = RandomPlayer()
+    _tree: MonteCarloTreeSearch.Tree | None
+    _logger: logging.Logger
 
     def __init__(
-        self: "MCTSPlayer", game: Connect4, player: int, next_player: int, mcts_config: MCTSPlayerConfig,
+        self: "MCTSPlayer",
+        game: Connect4,
+        player: int,
+        next_player: int,
+        mcts_config: MCTSPlayerConfig,
+        logger_handler: LoggerHandler,
     ) -> None:
         self._game = game
         self._player = player
         self._next_player = next_player
         self._mcts_config = mcts_config
+        self._logger = logger_handler.get_logger(type(self).__name__)
 
         self.reset()
 
@@ -74,6 +84,10 @@ class MCTSPlayer(IPlayer):
         )
 
         self.winning_probability = winning_probability
+        if self.winning_probability is not None:
+            self._logger.debug(
+                f"Best action=[{best_action}] has estimated probability of winning [{round(self.winning_probability*100,2)}%]",
+            )
 
         if self._mcts_config.reuse_tree:
             self._tree = tree
