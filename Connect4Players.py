@@ -12,14 +12,19 @@ from LoggerHandler import LoggerHandler
 
 
 class RandomPlayer(IPlayer):
+    _name: str
+
     def __init__(self: "RandomPlayer") -> None:
-        pass
+        self._name = "Random"
 
     def make_action(self: "RandomPlayer", game: Connect4, available_actions: list[int]) -> int:
         return make_random_choice(available_actions)
 
     def reset(self: "RandomPlayer") -> None:
         pass
+
+    def get_name(self: "RandomPlayer") -> str:
+        return self._name
 
 
 class DQPlayer(IPlayer):
@@ -43,6 +48,7 @@ class DQPlayer(IPlayer):
 
 
 class MCTSPlayer(IPlayer):
+    _name: str
     _game: Connect4
     _player: int
     _next_player: int
@@ -65,6 +71,8 @@ class MCTSPlayer(IPlayer):
         self._next_player = next_player
         self._mcts_config = mcts_config
         self._logger = logger_handler.get_logger(type(self).__name__)
+
+        self._name = self._mcts_config.name
 
         self.reset()
 
@@ -102,6 +110,9 @@ class MCTSPlayer(IPlayer):
     def reset(self: "MCTSPlayer") -> None:
         self._tree = None
         self.winning_probability = None
+
+    def get_name(self: "MCTSPlayer") -> str:
+        return self._name
 
     def get_optimal_actions_qvalues(self: "MCTSPlayer") -> Tuple[list, list, list, list]:
         best_actions, q_values, amaf_q_values, nodes = MonteCarloTreeSearch.get_optimal_tree_actions(

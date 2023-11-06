@@ -11,3 +11,7 @@ class IPlayer(ABC):
     @abstractmethod
     def reset(self: "IPlayer") -> None:
         pass
+
+    @abstractmethod
+    def get_name(self: "IPlayer") -> str:
+        pass

@@ -48,7 +48,7 @@ class Connect4GameHandler:
             # get new action
             action = self.players[current_player_turn].make_action(self.game, clever_available_actions)
             self._logger.debug(
-                f"Round [{round}]: player=[{self.game.get_current_player()}] made action=[{action}] with available actions={clever_available_actions}.",
+                f"Round [{round}]: player=[{self.game.get_current_player()}] with name=[{self.players[self.game.get_current_player()].get_name()}] made action=[{action}] with available actions={clever_available_actions}.",
             )
 
             # perform new action
@@ -75,7 +75,7 @@ class Connect4GameHandler:
             self.play_game()
 
             winner = self.game.get_winner()
-            self._logger.debug(f"Game  [{game_number}]: was won by player: [{winner}].")
+            self._logger.debug(f"Game  [{game_number}]: was won by player=[{winner}] with name=[{self.players[winner].get_name()}].")
             winner = winner if winner is not None else 0
             winners.append(winner)
 
