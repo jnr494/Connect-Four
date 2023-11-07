@@ -3,8 +3,9 @@ import unittest
 import Connect4Game
 import GameTurnHandler
 from ConfigHandler import ConfigHandler
-from MCTSPlayerFactory import MCTSPlayerFactory, MCTSPlayerNames
 from LoggerHandler import LoggerHandler
+from MCTSPlayerFactory import MCTSPlayerFactory, MCTSPlayerNames
+
 
 class MCTSPlayerFactoryTests(unittest.TestCase):
     def test_creation_of_normal_player(self: "MCTSPlayerFactoryTests") -> None:
@@ -20,7 +21,6 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
         player.reset()
         self.assertIsNone(player._tree)
         self.assertIsNone(player._tree)
-
 
     def test_creation_of_hard_player(self: "MCTSPlayerFactoryTests") -> None:
         game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])

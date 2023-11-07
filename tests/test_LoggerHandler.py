@@ -1,8 +1,9 @@
+import logging
 import unittest
 
-import LoggerHandler
 import ConfigHandler
-import logging
+import LoggerHandler
+
 
 class LoggerHandlerTests(unittest.TestCase):
     def test_get_logger(self: "LoggerHandlerTests") -> None:

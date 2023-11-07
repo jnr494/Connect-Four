@@ -48,10 +48,10 @@ class ConfigTypeConverter:
 
 class MCTSPlayerConfig:
     name: str
-    max_count: int | None
-    max_depth: int | None
-    confidence_value: float | None = 4
-    rave_param: float | None
+    max_count: int
+    max_depth: int
+    confidence_value: float
+    rave_param: float
     reuse_tree: bool
     randomize_action: bool
 
@@ -79,12 +79,24 @@ class MCTSPlayerConfig:
             "randomize_action",
         )
 
-        # Convert config type and set
+        # Convert config type
+        max_count_int = ConfigTypeConverter.to_int(max_count)
+        max_depth_int = ConfigTypeConverter.to_int(max_depth)
+        confidence_value_float = ConfigTypeConverter.to_float(confidence_value)
+        rave_param_float = ConfigTypeConverter.to_float(rave_param)
+
+        #set
         self.name = name
-        self.max_count = ConfigTypeConverter.to_int(max_count)
-        self.max_depth = ConfigTypeConverter.to_int(max_depth)
-        self.confidence_value = ConfigTypeConverter.to_float(confidence_value)
-        self.rave_param = ConfigTypeConverter.to_float(rave_param)
+
+        if max_count_int is not None:
+            self.max_count = max_count_int
+        if max_depth_int is not None:
+            self.max_depth = max_depth_int
+        if confidence_value_float is not None:
+            self.confidence_value = confidence_value_float
+        if rave_param_float is not None:
+            self.rave_param = rave_param_float
+
         self.reuse_tree = reuse_tree
         self.randomize_action = randomize_action
 

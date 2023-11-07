@@ -60,6 +60,31 @@ class Connect4GameTests(unittest.TestCase):
         game.place_disc_using_turn_handler(3)
         self.assertEqual(game._winner, 1)
 
+    def test_less_simple_win(self: "Connect4GameTests") -> None:
+        game_turn_handler = GameTurnHandler([1, -1])
+        game = Connect4(game_turn_handler=game_turn_handler)
+
+        game.place_disc_using_turn_handler(1)
+        self.assertIsNone(game._winner)
+        game.next_turn()
+        game.place_disc_using_turn_handler(0)
+        self.assertIsNone(game._winner)
+        game.next_turn()
+        game.place_disc_using_turn_handler(4)
+        self.assertIsNone(game._winner)
+        game.next_turn()
+        game.place_disc_using_turn_handler(0)
+        self.assertIsNone(game._winner)
+        game.next_turn()
+        game.place_disc_using_turn_handler(2)
+        self.assertIsNone(game._winner)
+        game.next_turn()
+        game.place_disc_using_turn_handler(0)
+        self.assertIsNone(game._winner)
+        game.next_turn()
+        game.place_disc_using_turn_handler(3)
+        self.assertEqual(game._winner, 1)
+
     def test_copy(self: "Connect4GameTests") -> None:
         game_turn_handler = GameTurnHandler([1, -1])
         game = Connect4(game_turn_handler=game_turn_handler)
