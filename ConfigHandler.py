@@ -51,7 +51,7 @@ class MCTSPlayerConfig:
     max_count: int
     max_depth: int
     confidence_value: float
-    rave_param: float
+    rave_param: float | None
     reuse_tree: bool
     randomize_action: bool
 
@@ -94,8 +94,8 @@ class MCTSPlayerConfig:
             self.max_depth = max_depth_int
         if confidence_value_float is not None:
             self.confidence_value = confidence_value_float
-        if rave_param_float is not None:
-            self.rave_param = rave_param_float
+
+        self.rave_param = rave_param_float #Okay for rav_param to be None
 
         self.reuse_tree = reuse_tree
         self.randomize_action = randomize_action
