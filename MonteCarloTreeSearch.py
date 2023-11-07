@@ -227,7 +227,7 @@ def MonteCarloTreeSearch(
     counter = 0
 
     players = [player, next_player]
-    game_copy = Connect4Game.Connect4(game)
+    game_copy = game.copy()
 
     while counter < max_count:
         game_copy.reset(game)
@@ -248,10 +248,8 @@ def MonteCarloTreeSearch(
 
             ##expansion and stop selection
             if not tree.is_node_in_tree(current_state_hash):
-                clever_available_actions = game_copy.get_clever_available_actions(
-                    players[player_turn],
-                    players[next_player_turn],
-                )
+                clever_available_actions = game_copy.get_clever_available_actions_using_turn_handler()
+
                 # find priors and win_prediction from evaluator
                 priors, win_prediction = evaluator(game_copy.get_board())
                 filtered_priors = priors[clever_available_actions]
@@ -286,10 +284,11 @@ def MonteCarloTreeSearch(
             new_row_heights.append(game.next_row_height[selected_action])
 
             # perform action
-            game_copy.place_disc(selected_action, players[player_turn])
+            game_copy.place_disc_using_turn_handler(selected_action)
             # check if game is over
             terminal_bool, last_player, last_player_reward = check_game_over(game_copy, players[player_turn])
             # update player turn
+            game_copy.next_turn()
             player_turn = next_player_turn
 
         ##simulation
@@ -297,19 +296,17 @@ def MonteCarloTreeSearch(
             while not terminal_bool:
                 next_player_turn = (player_turn + 1) % 2
                 # get available actions
-                clever_available_actions = game_copy.get_clever_available_actions(
-                    players[player_turn],
-                    players[next_player_turn],
-                )
+                clever_available_actions = game_copy.get_clever_available_actions_using_turn_handler()
                 # get and simulate action
                 sim_action = rollout_player.make_action(game_copy, clever_available_actions)
                 actions.append(sim_action)
                 new_row_heights.append(game.next_row_height[sim_action])
-                game_copy.place_disc(sim_action, players[player_turn])
+                game_copy.place_disc_using_turn_handler(sim_action)
 
                 # check if game is over
                 terminal_bool, last_player, last_player_reward = check_game_over(game_copy, players[player_turn])
                 # update player turn
+                game_copy.next_turn()
                 player_turn = next_player_turn
 
             last_player_reward = (
