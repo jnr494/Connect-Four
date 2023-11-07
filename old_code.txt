@@ -41,3 +41,44 @@ def adjust_action(self: "Connect4GameHandler", action: int, flipped_bool: int) -
     if flipped_bool:
         action = (action - (self.game.no_cols - 1)) * (-1)
     return action
+
+"""
+This section is from MonteCarloTreeSearch.py
+"""
+
+def get_optimal_action_and_next_state_hash(node: dict, max_bool: bool):
+    best_action = select_node_action_ucb1(node, 0, None, max_bool=max_bool)
+    best_action_idx = node["actions_idx"][best_action]
+    q_value = node["q_values"][best_action_idx]
+    amaf_q_value = node["amaf_q_values"][best_action_idx]
+    next_state_hash = node["next_state_hash"][best_action_idx]
+    return best_action, q_value, amaf_q_value, next_state_hash
+
+def get_optimal_tree_actions(game: Connect4Game.Connect4, tree: Tree, player: int, next_player: int):
+    start_state_hash = hash(game.get_board().tobytes())
+    current_node = tree.get_node(start_state_hash)
+
+    players = [player, next_player]
+    player_turn = 0
+
+    nodes = []
+    state_hashes = []
+    q_values = []
+    best_actions = []
+    amaf_q_values = []
+
+    while True:
+        best_action, q_value, amaf_q_value, next_state_hash = get_optimal_action_and_next_state_hash(
+            current_node,
+            players[player_turn] == player,
+        )
+        nodes.append(current_node)
+        state_hashes.append(next_state_hash)
+        q_values.append(q_value)
+        amaf_q_values.append(amaf_q_value)
+        best_actions.append(best_action)
+        if next_state_hash == 0:
+            return best_actions, q_values, amaf_q_values, nodes
+
+        player_turn = (player_turn + 1) % 2
+        current_node = tree.get_node(next_state_hash)

@@ -13,6 +13,7 @@ class Connect4:
     _game_turn_handler: GameTurnHandler
     _winner: int | None
     _board: npt.NDArray[np.float64]
+    next_row_height: npt.NDArray[np.float64]
 
     def __init__(
         self: "Connect4",

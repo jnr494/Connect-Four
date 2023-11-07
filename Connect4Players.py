@@ -1,5 +1,4 @@
 import logging
-from typing import Tuple
 
 import numba
 import numpy as np
@@ -94,7 +93,7 @@ class MCTSPlayer(IPlayer):
         self.winning_probability = winning_probability
         if self.winning_probability is not None:
             self._logger.debug(
-                f"Name=[{self._mcts_config.name}] found best action=[{best_action}] has estimated probability of winning [{round(self.winning_probability*100,2)}%]",
+                f"Name=[{self._mcts_config.name}] found best action=[{best_action}] has estimated probability of winning [{round(self.winning_probability*100,2)}%]",  # noqa: E501
             )
 
         if self._mcts_config.reuse_tree:
@@ -113,16 +112,6 @@ class MCTSPlayer(IPlayer):
 
     def get_name(self: "MCTSPlayer") -> str:
         return self._name
-
-    def get_optimal_actions_qvalues(self: "MCTSPlayer") -> Tuple[list, list, list, list]:
-        best_actions, q_values, amaf_q_values, nodes = MonteCarloTreeSearch.get_optimal_tree_actions(
-            self._game,
-            self._tree,
-            self._player,
-            self._next_player,
-        )
-        return best_actions, q_values, amaf_q_values, nodes
-
 
 @numba.njit
 def make_random_choice(available_actions: list[int]) -> int:

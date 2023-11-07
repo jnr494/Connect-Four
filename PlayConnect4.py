@@ -227,7 +227,7 @@ class PlayConnect4:
         available_actions = self._game.get_available_actions()
         available_actions = list(np.array(available_actions) + 1)  # adjust for be 1-based
 
-        human_action_str: str | None = self._question_to_human_player(
+        human_action_str: str = self._question_to_human_player(
             "Your turn human. Choose a column to play " + str(available_actions) + ": ",
         )
 
@@ -270,33 +270,8 @@ class PlayConnect4:
         self._message_to_human_player(f"I will play column {action+1}")
         if hasattr(self.player, "winning_probability"):
             self._message_to_human_player(
-                "I estimate that my probability of winning is: "
-                + str(round(self.player.winning_probability, 4) * 100)
-                + "%",
+                f"I estimate that my probability of winning is: {round(self.player.winning_probability, 4) * 100}%",
             )
-            if self._debug:
-                (
-                    optimal_actions,
-                    q_values,
-                    amaf_q_values,
-                    nodes,
-                ) = self.player.get_optimal_actions_qvalues()
-                self._logger.debug("Optimal actions: " + [i + 1 for i in optimal_actions])
-                self._logger.debug("Q values: " + [round(i, 4) for i in q_values])
-                self._logger.debug(
-                    "AMAF Q values: " + [round(i, 4) for i in amaf_q_values],
-                )
-                for idx, node in enumerate(nodes):
-                    self._logger.debug(
-                        "Number of visits "
-                        + str(idx)
-                        + ": "
-                        + node["no_visits_actions"]
-                        + " Q: "
-                        + tuple(np.round(node["q_values"], 3))
-                        + " AA: ",
-                        node["actions"] + 1,
-                    )
 
     def _question_to_human_player(self: "PlayConnect4", question: str) -> str:
         self._logger.info(f"Question to player: '{question}'")

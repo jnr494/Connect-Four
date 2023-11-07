@@ -1,18 +1,40 @@
-from typing import Tuple
+from typing import Callable, Optional, Tuple
 
 import numba
 import numpy as np
 import numpy.typing as npt
 
 import Connect4Game
+from IPlayer import IPlayer
+
+
+class Node:
+    def __init__(
+        self: "Node",
+        state_hash: int,
+        available_actions: list[int],
+        next_row_height: npt.NDArray[np.float64],
+        priors: npt.NDArray[np.float64],
+        prior_win_prediction: float,
+    ):
+        self.state_hash = state_hash
+        self.available_actions = available_actions
+        self.next_row_height = next_row_height
+        self.priors = priors
+        self.prior_win_prediction = prior_win_prediction
 
 
 class Tree:
     def __init__(self: "Tree") -> None:
-        self.nodes = {}
+        self.nodes: dict = {}
 
     def new_node(
-        self: "Tree", state_hash: int, available_actions, next_row_height, priors, prior_win_prediction,
+        self: "Tree",
+        state_hash: int,
+        available_actions: list[int],
+        next_row_height: npt.NDArray[np.float64],
+        priors: npt.NDArray[np.float64],
+        prior_win_prediction: float,
     ) -> dict:
         new_node = {
             "no_visits": 0,
@@ -43,8 +65,8 @@ class Tree:
         state_hash: int,
         action: int,
         reward: float,
-        following_actions: npt.ArrayLike,
-        following_row_heights: npt.ArrayLike,
+        following_actions: npt.NDArray[np.float64],
+        following_row_heights: npt.NDArray[np.float64],
         use_rave: bool = True,
     ) -> None:
         node = self.nodes[state_hash]
@@ -79,7 +101,7 @@ class Tree:
 
 
 @numba.njit
-def find_first_in_array(array: npt.ArrayLike, element) -> float:
+def find_first_in_array(array: npt.ArrayLike, element: float) -> float:
     first_following_action_idx = np.where(array == element)[0]
     if len(first_following_action_idx) > 0:
         return first_following_action_idx[0]
@@ -107,7 +129,9 @@ def check_game_over(game: Connect4Game.Connect4, player: int) -> Tuple[bool, int
     return terminal_bool, player, last_player_reward
 
 
-def select_node_action_ucb1(node, confidence_value, rave_param, max_bool=True):
+def select_node_action_ucb1(
+    node: dict, confidence_value: float, rave_param: Optional[float], max_bool: bool = True,
+) -> int:
     if rave_param is None:
         rave_bool = False
         rave_param = 0
@@ -131,18 +155,18 @@ def select_node_action_ucb1(node, confidence_value, rave_param, max_bool=True):
 
 @numba.njit
 def select_node_action_ucb1_numba(
-    q_values,
-    no_visits,
-    no_visits_actions,
-    confidence_value,
-    amaf_q_values,
-    amaf_no_visits_actions,
-    rave_bool,
-    rave_param,
-    actions,
-    max_bool,
-    priors,
-):
+    q_values: npt.NDArray[np.float64],
+    no_visits: list[int],
+    no_visits_actions: npt.NDArray[np.float64],
+    confidence_value: float,
+    amaf_q_values: list[int],
+    amaf_no_visits_actions: npt.NDArray[np.float64],
+    rave_bool: bool,
+    rave_param: float,
+    actions: list[int],
+    max_bool: bool,
+    priors: npt.NDArray[np.float64],
+) -> int:
     exploration_term = priors * np.sqrt(no_visits) / (no_visits_actions + 1)
 
     if rave_bool:
@@ -165,16 +189,11 @@ def select_node_action_ucb1_numba(
     return select_action
 
 
-def get_optimal_action_and_next_state_hash(node: dict, max_bool: bool):
-    best_action = select_node_action_ucb1(node, 0, None, max_bool=max_bool)
-    best_action_idx = node["actions_idx"][best_action]
-    q_value = node["q_values"][best_action_idx]
-    amaf_q_value = node["amaf_q_values"][best_action_idx]
-    next_state_hash = node["next_state_hash"][best_action_idx]
-    return best_action, q_value, amaf_q_value, next_state_hash
-
-
-def get_action_probabilities(game, tree, temperature=1):
+def get_action_probabilities(
+    game: Connect4Game.Connect4,
+    tree: Tree,
+    temperature: float = 1,
+) -> npt.NDArray[np.float64]:
     start_state_hash = hash(game.get_board().tobytes())
     current_node = tree.get_node(start_state_hash)
     no_visits = np.zeros(game.no_cols)
@@ -183,48 +202,18 @@ def get_action_probabilities(game, tree, temperature=1):
     return no_visits_temperature / sum(no_visits_temperature)
 
 
-def get_optimal_tree_actions(game: Connect4Game.Connect4, tree: Tree, player: int, next_player: int):
-    start_state_hash = hash(game.get_board().tobytes())
-    current_node = tree.get_node(start_state_hash)
-
-    players = [player, next_player]
-    player_turn = 0
-
-    nodes = []
-    state_hashes = []
-    q_values = []
-    best_actions = []
-    amaf_q_values = []
-
-    while True:
-        best_action, q_value, amaf_q_value, next_state_hash = get_optimal_action_and_next_state_hash(
-            current_node,
-            players[player_turn] == player,
-        )
-        nodes.append(current_node)
-        state_hashes.append(next_state_hash)
-        q_values.append(q_value)
-        amaf_q_values.append(amaf_q_value)
-        best_actions.append(best_action)
-        if next_state_hash == 0:
-            return best_actions, q_values, amaf_q_values, nodes
-
-        player_turn = (player_turn + 1) % 2
-        current_node = tree.get_node(next_state_hash)
-
-
 def MonteCarloTreeSearch(
-    game,
-    player,
-    next_player,
-    max_count,
-    max_depth,
-    confidence_value,
-    rave_param,
-    rollout_player,
-    tree=None,
-    evaluator=None,
-    rollout_weight=1,
+    game: Connect4Game.Connect4,
+    player: int,
+    next_player: int,
+    max_count: int,
+    max_depth: int,
+    confidence_value: float,
+    rave_param: Optional[float],
+    rollout_player: IPlayer,
+    tree: Optional[Tree] = None,
+    evaluator: Optional[Callable] = None,
+    rollout_weight: float = 1,
 ):
     if tree is None:
         tree = Tree()
@@ -242,10 +231,10 @@ def MonteCarloTreeSearch(
 
     while counter < max_count:
         game_copy.reset(game)
-        visited_state_hashes = []
+        visited_state_hashes: list[int] = []
         no_visited_states = len(visited_state_hashes)
-        actions = []
-        new_row_heights = []
+        actions: list[int] = []
+        new_row_heights: list[int] = []
         terminal_bool = False
         player_turn = 0
 
@@ -313,7 +302,7 @@ def MonteCarloTreeSearch(
                     players[next_player_turn],
                 )
                 # get and simulate action
-                sim_action = rollout_player.make_action(game_copy.get_board(), clever_available_actions)
+                sim_action = rollout_player.make_action(game_copy, clever_available_actions)
                 actions.append(sim_action)
                 new_row_heights.append(game.next_row_height[sim_action])
                 game_copy.place_disc(sim_action, players[player_turn])
@@ -338,8 +327,8 @@ def MonteCarloTreeSearch(
                 visited_state_hashes[idx],
                 actions[idx],
                 player_reward,
-                following_actions=actions[idx + 2 :: 2],
-                following_row_heights=new_row_heights[idx + 2 :: 2],
+                following_actions=np.array(actions[idx + 2 :: 2]),
+                following_row_heights=np.array(new_row_heights[idx + 2 :: 2]),
                 use_rave=use_rave,
             )
 
