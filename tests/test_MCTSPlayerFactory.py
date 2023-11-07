@@ -20,7 +20,7 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
         self.assertGreaterEqual(player.winning_probability, 0.5)
         player.reset()
         self.assertIsNone(player._tree)
-        self.assertIsNone(player._tree)
+        self.assertIsNone(player.winning_probability)
 
     def test_creation_of_hard_player(self: "MCTSPlayerFactoryTests") -> None:
         game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
