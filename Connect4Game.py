@@ -74,7 +74,7 @@ class Connect4:
                 -1: np.zeros((self.no_rows, self.no_cols)),
             }
             self._winner = None
-            if hasattr(self,"_game_turn_handler"):
+            if hasattr(self, "_game_turn_handler"):
                 self._game_turn_handler.reset()
         else:
             self._board = copy.deepcopy(game.get_board())
@@ -130,7 +130,9 @@ class Connect4:
             return all_available_actions
 
     def plot_board_state(
-        self: "Connect4", board_state: Optional[npt.NDArray[np.float64]] = None, update: bool = False
+        self: "Connect4",
+        board_state: Optional[npt.NDArray[np.float64]] = None,
+        update: bool = False,
     ) -> None:
         if board_state is None:
             board_state = self.get_board()
@@ -211,16 +213,18 @@ def update_winning_possibilities(
         for i in range(1, 3):
             count_player += board[row + i * row_dir, col + i * col_dir] == player
 
-        if count_player > 1:
-            # check first possibility. (row,col) is last in direction
-            if first_possibility and (count_player > 2 or board[row + 3 * row_dir, col + 3 * col_dir] == player):
-                for i in range(0, 4):
-                    current_possibilities[row + i * row_dir, col + i * col_dir] = 1
+        if count_player <= 1:
+            continue
 
-            # check second possibility (row,col) is in the middle, but majority is in current direction
-            if second_possibility and (count_player > 2 or board[row - row_dir, col - col_dir] == player):
-                for i in range(-1, 3):
-                    current_possibilities[row + i * row_dir, col + i * col_dir] = 1
+        # check first possibility. (row,col) is last in direction
+        if first_possibility and (count_player > 2 or board[row + 3 * row_dir, col + 3 * col_dir] == player):
+            for i in range(0, 4):
+                current_possibilities[row + i * row_dir, col + i * col_dir] = 1
+
+        # check second possibility (row,col) is in the middle, but majority is in current direction
+        if second_possibility and (count_player > 2 or board[row - row_dir, col - col_dir] == player):
+            for i in range(-1, 3):
+                current_possibilities[row + i * row_dir, col + i * col_dir] = 1
 
 
 @numba.njit
