@@ -88,7 +88,7 @@ class Connect4:
         return self._game_turn_handler
 
     def copy(self: "Connect4") -> "Connect4":
-        return Connect4(self, self._game_turn_handler.copy())
+        return Connect4(self)
 
     def get_available_actions(self: "Connect4") -> list[int]:
         return get_available_actions_numba(self.get_board())
