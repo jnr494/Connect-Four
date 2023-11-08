@@ -38,7 +38,7 @@ class Connect4GameHandler:
         for player in self.players:
             player.reset()
 
-    def play_game(self: "Connect4GameHandler") -> None:
+    def play_game(self: "Connect4GameHandler") -> int:
         for round in range(self.game_size):
             current_player_turn = self.game.get_current_player_turn()
 
@@ -61,8 +61,11 @@ class Connect4GameHandler:
             # update player turn
             self.game.next_turn()
 
+        return round
+
     def play_n_games(self: "Connect4GameHandler", no_games: int, plot: bool = False) -> list[int]:
-        winners: list[int] = []
+        self.winners: list[int] = []
+        self.rounds: list[int] = []
 
         for game_number in range(no_games):
             self._logger.debug(f"Game [{game_number}] starting.")
@@ -72,13 +75,14 @@ class Connect4GameHandler:
             for _ in range(game_number % self.no_players):
                 self.game.next_turn()
 
-            self.play_game()
+            end_round = self.play_game()
+            self.rounds.append(end_round)
 
             winner = self.game.get_winner()
             self._logger.debug(f"Game  [{game_number}]: was won by player=[{winner}].")
             winner = winner if winner is not None else 0
-            winners.append(winner)
+            self.winners.append(winner)
 
             if plot:
                 self.game.plot_board_state()
-        return winners
+        return self.winners

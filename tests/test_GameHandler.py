@@ -77,3 +77,23 @@ class Connect4GameTests(unittest.TestCase):
         winners = game_handler.play_n_games(number_of_games)
 
         self.assertAlmostEqual(np.sum(winners), -1 * number_of_games)
+
+    def test_god_vs_god_mcts_play_many_rounds(self: "Connect4GameTests") -> None:
+        config_handler = ConfigHandler.ConfigHandler()
+        logger_handler = LoggerHandler.LoggerHandler(config_handler)
+
+        game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
+        game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
+
+        player0 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, 1, -1, "god", config_handler, logger_handler)
+        player1 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, -1, 1, "god", config_handler, logger_handler)
+        game_handler = Connect4GameHandler.Connect4GameHandler(game, player0, player1, logger_handler, config_handler)
+        number_of_games = 1
+
+        np.random.seed(72)
+
+        #play game
+        game_handler.play_n_games(number_of_games)
+        rounds = game_handler.rounds
+
+        self.assertGreater(np.average(rounds),30)
