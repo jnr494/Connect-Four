@@ -109,12 +109,12 @@ def find_first_in_array(array: npt.ArrayLike, element: float) -> float:
         return -1
 
 
-def check_game_over(game: Connect4Game.Connect4, player: int) -> Tuple[bool, int, float]:
+def check_game_over(game: Connect4Game.Connect4) -> Tuple[bool, int, float]:
     last_player_reward: float
     game_won: bool
     terminal_bool: bool
 
-    game_won = player == game.get_winner()
+    game_won = game.get_current_player() == game.get_winner()
     if game_won:
         terminal_bool = True
         last_player_reward = 1.0
@@ -126,7 +126,7 @@ def check_game_over(game: Connect4Game.Connect4, player: int) -> Tuple[bool, int
         terminal_bool = False
         last_player_reward = 0.0
 
-    return terminal_bool, player, last_player_reward
+    return terminal_bool, game.get_current_player(), last_player_reward
 
 
 def select_node_action_ucb1(
@@ -289,7 +289,7 @@ def MonteCarloTreeSearch(
             # perform action
             game_copy.place_disc_using_turn_handler(selected_action)
             # check if game is over
-            terminal_bool, last_player, last_player_reward = check_game_over(game_copy, players[player_turn])
+            terminal_bool, last_player, last_player_reward = check_game_over(game_copy)
 
             # update turn
             player_turn = next_player_turn
@@ -313,7 +313,7 @@ def MonteCarloTreeSearch(
                 game_copy.place_disc_using_turn_handler(sim_action)
 
                 # check if game is over
-                terminal_bool, last_player, last_player_reward = check_game_over(game_copy, players[player_turn])
+                terminal_bool, last_player, last_player_reward = check_game_over(game_copy)
                 # update turn
                 player_turn = next_player_turn
                 game_copy.next_turn()

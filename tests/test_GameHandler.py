@@ -54,7 +54,7 @@ class Connect4GameTests(unittest.TestCase):
         number_of_games = 10
         winners = game_handler.play_n_games(number_of_games)
 
-        self.assertLess(np.sum(winners), 0)
+        self.assertLess(np.sum(winners), -number_of_games/3)
 
     def test_normal_vs_god_mcts(self: "Connect4GameTests") -> None:
         config_handler = ConfigHandler.ConfigHandler()
