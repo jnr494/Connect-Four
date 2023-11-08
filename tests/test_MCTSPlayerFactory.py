@@ -1,4 +1,5 @@
 import unittest
+import numpy as np
 
 import Connect4Game
 import GameTurnHandler
@@ -55,3 +56,38 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
         player.reset()
         self.assertIsNone(player._tree)
         self.assertIsNone(player.winning_probability)
+
+    def test_god_player_first_few_moves(self: "MCTSPlayerFactoryTests") -> None:
+
+        for seed in range(420,423):
+            np.random.seed(seed)
+            #Create game and god player
+            game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
+            game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
+            config_handler = ConfigHandler()
+            logger_handler = LoggerHandler(config_handler)
+            player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.god, config_handler, logger_handler)
+
+            #First action should be 3
+            action = player.make_action(game, game.get_clever_available_actions_using_turn_handler())
+            self.assertEqual(action, 3)
+            game.place_disc_using_turn_handler(action)
+            game.next_turn()
+
+            #Manual action for opponent
+            action = 3
+            game.place_disc_using_turn_handler(action)
+            game.next_turn()
+
+            #Second action should also be 3
+            action = player.make_action(game, game.get_clever_available_actions_using_turn_handler())
+            self.assertEqual(action, 3)
+            game.place_disc_using_turn_handler(action)
+            game.next_turn()
+
+            #Manual action for opponent
+            action = 3
+            game.place_disc_using_turn_handler(action)
+            game.next_turn()
+
+

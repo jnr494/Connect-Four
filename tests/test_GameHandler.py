@@ -56,7 +56,7 @@ class Connect4GameTests(unittest.TestCase):
 
         self.assertLess(np.sum(winners), 0)
 
-    def test_hard_vs_god_mcts(self: "Connect4GameTests") -> None:
+    def test_normal_vs_god_mcts(self: "Connect4GameTests") -> None:
         config_handler = ConfigHandler.ConfigHandler()
         logger_handler = LoggerHandler.LoggerHandler(config_handler)
 
@@ -67,7 +67,7 @@ class Connect4GameTests(unittest.TestCase):
             game,
             1,
             -1,
-            "hard",
+            "normal",
             config_handler,
             logger_handler,
         )
