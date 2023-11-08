@@ -241,6 +241,10 @@ def MonteCarloTreeSearch(
         ##selection
         while (not terminal_bool) and len(visited_state_hashes) <= max_depth:
             next_player_turn = (player_turn + 1) % 2
+            if player_turn != game_copy.get_current_player_turn():
+                "ERROR! wrong player turn"
+            if players[player_turn] != game_copy.get_current_player():
+                "ERROR! wrong player"
 
             current_state_hash = hash(game_copy.get_board().tobytes())
             visited_state_hashes.append(current_state_hash)
@@ -248,10 +252,7 @@ def MonteCarloTreeSearch(
 
             ##expansion and stop selection
             if not tree.is_node_in_tree(current_state_hash):
-                clever_available_actions = game_copy.get_clever_available_actions(
-                    players[player_turn],
-                    players[next_player_turn],
-                )
+                clever_available_actions = game_copy.get_clever_available_actions_using_turn_handler()
                 # find priors and win_prediction from evaluator
                 priors, win_prediction = evaluator(game_copy.get_board())
                 filtered_priors = priors[clever_available_actions]
@@ -286,31 +287,36 @@ def MonteCarloTreeSearch(
             new_row_heights.append(game.next_row_height[selected_action])
 
             # perform action
-            game_copy.place_disc(selected_action, players[player_turn])
+            game_copy.place_disc_using_turn_handler(selected_action)
             # check if game is over
             terminal_bool, last_player, last_player_reward = check_game_over(game_copy, players[player_turn])
-            # update player turn
+
+            # update turn
             player_turn = next_player_turn
+            game_copy.next_turn()
 
         ##simulation
         if rollout_weight > 0:
             while not terminal_bool:
                 next_player_turn = (player_turn + 1) % 2
+                if player_turn != game_copy.get_current_player_turn():
+                    "ERROR! wrong player turn"
+                if players[player_turn] != game_copy.get_current_player():
+                    "ERROR! wrong player"
+
                 # get available actions
-                clever_available_actions = game_copy.get_clever_available_actions(
-                    players[player_turn],
-                    players[next_player_turn],
-                )
+                clever_available_actions = game_copy.get_clever_available_actions_using_turn_handler()
                 # get and simulate action
                 sim_action = rollout_player.make_action(game_copy, clever_available_actions)
                 actions.append(sim_action)
                 new_row_heights.append(game.next_row_height[sim_action])
-                game_copy.place_disc(sim_action, players[player_turn])
+                game_copy.place_disc_using_turn_handler(sim_action)
 
                 # check if game is over
                 terminal_bool, last_player, last_player_reward = check_game_over(game_copy, players[player_turn])
-                # update player turn
+                # update turn
                 player_turn = next_player_turn
+                game_copy.next_turn()
 
             last_player_reward = (
                 rollout_weight * last_player_reward + (1 - rollout_weight) * current_node["prior_win_prediction"]
