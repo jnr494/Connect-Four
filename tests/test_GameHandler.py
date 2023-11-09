@@ -52,6 +52,8 @@ class GameHandlerTests(unittest.TestCase):
         player1 = MCTSPlayerFactory.MCTSPlayerFactory.create_player(game, -1, 1, "hard", config_handler, logger_handler)
         game_handler = Connect4GameHandler.Connect4GameHandler(game, player0, player1, logger_handler, config_handler)
         number_of_games = 10
+
+        np.random.seed(420)  # noqa: NPY002
         winners = game_handler.play_n_games(number_of_games)
 
         self.assertLess(np.sum(winners), -number_of_games/3)
