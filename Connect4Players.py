@@ -81,7 +81,6 @@ class MCTSPlayer(IPlayer):
         best_action, tree, winning_probability = MonteCarloTreeSearch.MonteCarloTreeSearch(
             self._game,
             self._player,
-            self._next_player,
             self._mcts_config.max_count,
             self._mcts_config.max_depth,
             self._mcts_config.confidence_value,

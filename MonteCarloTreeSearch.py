@@ -130,7 +130,10 @@ def check_game_over(game: Connect4Game.Connect4) -> Tuple[bool, int, float]:
 
 
 def select_node_action_ucb1(
-    node: dict, confidence_value: float, rave_param: Optional[float], max_bool: bool = True,
+    node: dict,
+    confidence_value: float,
+    rave_param: Optional[float],
+    max_bool: bool = True,
 ) -> int:
     if rave_param is None:
         rave_bool = False
@@ -205,7 +208,6 @@ def get_action_probabilities(
 def MonteCarloTreeSearch(
     game: Connect4Game.Connect4,
     player: int,
-    next_player: int,
     max_count: int,
     max_depth: int,
     confidence_value: float,
@@ -224,11 +226,10 @@ def MonteCarloTreeSearch(
 
     use_rave = rave_param is not None
 
-    counter = 0
-
     game_copy = Connect4Game.Connect4(game)
 
-    while counter < max_count:
+    for _ in range(max_count):
+        # Reset game and variables for new round
         game_copy.reset(game)
         visited_state_hashes: list[int] = []
         no_visited_states = len(visited_state_hashes)
@@ -238,7 +239,6 @@ def MonteCarloTreeSearch(
 
         ##selection
         while (not terminal_bool) and len(visited_state_hashes) <= max_depth:
-
             current_state_hash = hash(game_copy.get_board().tobytes())
             visited_state_hashes.append(current_state_hash)
             no_visited_states = len(visited_state_hashes)
@@ -274,7 +274,7 @@ def MonteCarloTreeSearch(
                 current_node,
                 confidence_value,
                 rave_param,
-                max_bool = game_copy.get_current_player() == player,
+                max_bool=game_copy.get_current_player() == player,
             )
 
             actions.append(selected_action)
@@ -291,7 +291,6 @@ def MonteCarloTreeSearch(
         ##simulation
         if rollout_weight > 0:
             while not terminal_bool:
-
                 # get available actions
                 clever_available_actions = game_copy.get_clever_available_actions_using_turn_handler()
                 # get and simulate action
@@ -324,8 +323,6 @@ def MonteCarloTreeSearch(
                 following_row_heights=np.array(new_row_heights[idx + 2 :: 2]),
                 use_rave=use_rave,
             )
-
-        counter += 1
 
     # find best action
     start_node = tree.get_node(visited_state_hashes[0])
