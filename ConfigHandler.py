@@ -54,50 +54,70 @@ class MCTSPlayerConfig:
     rave_param: float | None
     reuse_tree: bool
     randomize_action: bool
+    _config_section: str
+    _config_section_default: str
+    _config_handler: ConfigHandler
 
     def __init__(self: "MCTSPlayerConfig", config_handler: ConfigHandler, name: str) -> None:
-        config_section_default = "MCTSPlayer.default"
-        config_section: str = f"MCTSPlayer.{name}"
+        self._config_section_default = "MCTSPlayer.default"
+        self._config_section = f"MCTSPlayer.{name}"
+        self._config_handler = config_handler
 
-        # Get configs from config_handler
-        max_count = config_handler.get_config_or_alternative(config_section, config_section_default, "max_count")
-        max_depth = config_handler.get_config_or_alternative(config_section, config_section_default, "max_depth")
-        confidence_value = config_handler.get_config_or_alternative(
-            config_section,
-            config_section_default,
-            "confidence_value",
-        )
-        rave_param = config_handler.get_config_or_alternative(config_section, config_section_default, "rave_param")
-        reuse_tree = config_handler.get_config_boolean_or_alternative(
-            config_section,
-            config_section_default,
-            "reuse_tree",
-        )
-        randomize_action = config_handler.get_config_boolean_or_alternative(
-            config_section,
-            config_section_default,
-            "randomize_action",
-        )
-
-        # Convert config type
-        max_count_int = ConfigTypeConverter.to_int(max_count)
-        max_depth_int = ConfigTypeConverter.to_int(max_depth)
-        confidence_value_float = ConfigTypeConverter.to_float(confidence_value)
-        rave_param_float = ConfigTypeConverter.to_float(rave_param)
-
-        #set
         self.name = name
+        self._get_max_count()
+        self._get_max_depth()
+        self._get_confidence_value()
+        self._get_rave_param()
+        self._get_reuse_tree()
+        self._get_randomize_action()
 
+    def _get_max_count(self: "MCTSPlayerConfig") -> None:
+        max_count = self._config_handler.get_config_or_alternative(
+            self._config_section, self._config_section_default, "max_count",
+        )
+        max_count_int = ConfigTypeConverter.to_int(max_count)
         if max_count_int is not None:
             self.max_count = max_count_int
+
+    def _get_max_depth(self: "MCTSPlayerConfig") -> None:
+        max_depth = self._config_handler.get_config_or_alternative(
+            self._config_section, self._config_section_default, "max_depth",
+        )
+        max_depth_int = ConfigTypeConverter.to_int(max_depth)
         if max_depth_int is not None:
             self.max_depth = max_depth_int
+
+    def _get_confidence_value(self: "MCTSPlayerConfig") -> None:
+        confidence_value = self._config_handler.get_config_or_alternative(
+            self._config_section,
+            self._config_section_default,
+            "confidence_value",
+        )
+        confidence_value_float = ConfigTypeConverter.to_float(confidence_value)
         if confidence_value_float is not None:
             self.confidence_value = confidence_value_float
 
-        self.rave_param = rave_param_float #Okay for rav_param to be None
+    def _get_rave_param(self: "MCTSPlayerConfig") -> None:
+        rave_param = self._config_handler.get_config_or_alternative(
+            self._config_section, self._config_section_default, "rave_param",
+        )
+        rave_param_float = ConfigTypeConverter.to_float(rave_param)
+        self.rave_param = rave_param_float  # Okay for rav_param to be None
 
+    def _get_reuse_tree(self: "MCTSPlayerConfig") -> None:
+        reuse_tree = self._config_handler.get_config_boolean_or_alternative(
+            self._config_section,
+            self._config_section_default,
+            "reuse_tree",
+        )
         self.reuse_tree = reuse_tree
+
+    def _get_randomize_action(self: "MCTSPlayerConfig") -> None:
+        randomize_action = self._config_handler.get_config_boolean_or_alternative(
+            self._config_section,
+            self._config_section_default,
+            "randomize_action",
+        )
         self.randomize_action = randomize_action
 
 
