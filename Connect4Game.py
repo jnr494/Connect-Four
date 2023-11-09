@@ -20,9 +20,8 @@ class Connect4:
         game: Optional["Connect4"] = None,
         game_turn_handler: Optional[GameTurnHandler] = None,
     ) -> None:
-        self.no_rows = 6
-        self.no_cols = 7
-        self.blank_value = 0
+        self._no_rows = 6
+        self._no_cols = 7
         self.fig: plt.Figure | None = None
 
         if game_turn_handler is not None:
@@ -31,10 +30,10 @@ class Connect4:
         self.reset(game=game)
 
     def get_number_of_actions(self: "Connect4") -> int:
-        return self.no_cols
+        return self._no_cols
 
     def get_max_rounds(self: "Connect4") -> int:
-        return self.no_cols * self.no_rows
+        return self._no_cols * self._no_rows
 
     def place_disc(self: "Connect4", col: int) -> bool:
         return self._place_disc(col, self._game_turn_handler.get_current_player_value())
@@ -49,12 +48,12 @@ class Connect4:
         # check for win
         if self._winner is not None:
             return True
-        elif self.current_winning_possibilities[player][row, col] == 1:
+        elif self._current_winning_possibilities[player][row, col] == 1:
             self._winner = player
             return True
         else:
             # update current winning_possibilities
-            update_winning_possibilities(self._get_board(), self.current_winning_possibilities[player], player, col, row)
+            update_winning_possibilities(self._get_board(), self._current_winning_possibilities[player], player, col, row)
             return False
 
     def get_winner(self: "Connect4") -> int | None:
@@ -77,11 +76,11 @@ class Connect4:
 
     def reset(self: "Connect4", game: Optional["Connect4"] = None) -> None:
         if game is None:
-            self._board = np.zeros((self.no_rows, self.no_cols))
-            self.next_row_height = np.zeros((self.no_cols,), dtype=int)
-            self.current_winning_possibilities = {
-                1: np.zeros((self.no_rows, self.no_cols)),
-                -1: np.zeros((self.no_rows, self.no_cols)),
+            self._board = np.zeros((self._no_rows, self._no_cols))
+            self.next_row_height = np.zeros((self._no_cols,), dtype=int)
+            self._current_winning_possibilities = {
+                1: np.zeros((self._no_rows, self._no_cols)),
+                -1: np.zeros((self._no_rows, self._no_cols)),
             }
             self._winner = None
             if hasattr(self, "_game_turn_handler"):
@@ -89,7 +88,7 @@ class Connect4:
         else:
             self._board = copy.deepcopy(game._get_board())
             self.next_row_height = copy.deepcopy(game.next_row_height)
-            self.current_winning_possibilities = copy.deepcopy(game.current_winning_possibilities)
+            self._current_winning_possibilities = copy.deepcopy(game._current_winning_possibilities)
             self._winner = game._winner
             self._game_turn_handler = game.get_turn_handler().copy()
 
@@ -110,19 +109,19 @@ class Connect4:
 
     def _get_clever_available_actions(self: "Connect4", player: int, next_player: int) -> list[int]:
         winning_actions = find_available_winning_actions(
-            self.current_winning_possibilities[player],
+            self._current_winning_possibilities[player],
             self.next_row_height,
-            self.no_cols,
-            self.no_rows,
+            self._no_cols,
+            self._no_rows,
         )
         if len(winning_actions) > 0:
             return winning_actions
 
         must_block_actions = find_available_winning_actions(
-            self.current_winning_possibilities[next_player],
+            self._current_winning_possibilities[next_player],
             self.next_row_height,
-            self.no_cols,
-            self.no_rows,
+            self._no_cols,
+            self._no_rows,
         )
         if len(must_block_actions) > 0:
             return must_block_actions
@@ -130,9 +129,9 @@ class Connect4:
         all_available_actions = self.get_available_actions()
         filtered_actions = exclude_must_avoid_actions(
             all_available_actions,
-            self.current_winning_possibilities[next_player],
+            self._current_winning_possibilities[next_player],
             self.next_row_height,
-            self.no_rows,
+            self._no_rows,
         )
         if len(filtered_actions) > 0:
             return filtered_actions
@@ -165,7 +164,7 @@ class Connect4:
             self.ax = self.fig.add_subplot(111)
             self.scatter = self.ax.scatter(x + 0.5, y + 0.5, s=r, c=colors)
             self.ax.set_facecolor("blue")
-            plt.xticks(ticks=np.arange(7) + 0.5, labels=np.arange(1, self.no_cols + 1))
+            plt.xticks(ticks=np.arange(7) + 0.5, labels=np.arange(1, self._no_cols + 1))
             self.ax.get_yaxis().set_visible(False)
             plt.xlim([0, no_cols])
             plt.ylim([0, no_rows])

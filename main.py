@@ -92,8 +92,8 @@ def main1():
     Handler = C4GameHandler.Connect4GameHandler(game, player0, player1)
     
     #deep Q model
-    QModel = DeepQModel.DeepQModel(input_dim = game.no_rows * game.no_cols, 
-                                   output_dim=game.no_cols, 
+    QModel = DeepQModel.DeepQModel(input_dim = game._no_rows * game._no_cols, 
+                                   output_dim=game._no_cols, 
                                    no_layers = 6, 
                                    units = 15)
     

@@ -11,7 +11,7 @@ class Connect4GameTests(unittest.TestCase):
         game = Connect4()
 
         # Assert board is array of zeros of correct size
-        self.assertEqual(np.array_equal(game._get_board(), np.zeros((game.no_rows, game.no_cols))), True)
+        self.assertEqual(np.array_equal(game._get_board(), np.zeros((game._no_rows, game._no_cols))), True)
 
     def test_place_discs(self: "Connect4GameTests") -> None:
         game_turn_handler = GameTurnHandler([1, -1])
