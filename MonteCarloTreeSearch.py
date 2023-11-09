@@ -226,7 +226,6 @@ def MonteCarloTreeSearch(
 
     counter = 0
 
-    players = [player, next_player]
     game_copy = Connect4Game.Connect4(game)
 
     while counter < max_count:
@@ -236,15 +235,9 @@ def MonteCarloTreeSearch(
         actions: list[int] = []
         new_row_heights: list[int] = []
         terminal_bool = False
-        player_turn = 0
 
         ##selection
         while (not terminal_bool) and len(visited_state_hashes) <= max_depth:
-            next_player_turn = (player_turn + 1) % 2
-            if player_turn != game_copy.get_current_player_turn():
-                "ERROR! wrong player turn"
-            if players[player_turn] != game_copy.get_current_player():
-                "ERROR! wrong player"
 
             current_state_hash = hash(game_copy.get_board().tobytes())
             visited_state_hashes.append(current_state_hash)
@@ -284,9 +277,6 @@ def MonteCarloTreeSearch(
                 max_bool = game_copy.get_current_player() == player,
             )
 
-            if (players[player_turn] == player) != (game_copy.get_current_player() == player):
-                print("ERROR! wrong player")
-
             actions.append(selected_action)
             new_row_heights.append(game.next_row_height[selected_action])
 
@@ -296,17 +286,11 @@ def MonteCarloTreeSearch(
             terminal_bool, last_player, last_player_reward = check_game_over(game_copy)
 
             # update turn
-            player_turn = next_player_turn
             game_copy.next_turn()
 
         ##simulation
         if rollout_weight > 0:
             while not terminal_bool:
-                next_player_turn = (player_turn + 1) % 2
-                if player_turn != game_copy.get_current_player_turn():
-                    "ERROR! wrong player turn"
-                if players[player_turn] != game_copy.get_current_player():
-                    "ERROR! wrong player"
 
                 # get available actions
                 clever_available_actions = game_copy.get_clever_available_actions_using_turn_handler()
@@ -319,7 +303,6 @@ def MonteCarloTreeSearch(
                 # check if game is over
                 terminal_bool, last_player, last_player_reward = check_game_over(game_copy)
                 # update turn
-                player_turn = next_player_turn
                 game_copy.next_turn()
 
             last_player_reward = (
