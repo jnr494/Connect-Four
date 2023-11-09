@@ -226,7 +226,7 @@ def MonteCarloTreeSearch(
 
     use_rave = rave_param is not None
 
-    game_copy = Connect4Game.Connect4(game)
+    game_copy = game.copy()
 
     for _ in range(max_count):
         # Reset game and variables for new round

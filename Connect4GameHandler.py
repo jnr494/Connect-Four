@@ -25,7 +25,6 @@ class Connect4GameHandler:
 
         self.players = [player0, player1]
         self.no_players = len(self.players)
-        self.player_values = [1, -1]
 
         self._logger = logger_handler.get_logger(type(self).__name__)
         self._config_handler = config_handler
