@@ -11,8 +11,8 @@ import LoggerHandler
 import MCTSPlayerFactory
 
 
-class Connect4GameTests(unittest.TestCase):
-    def test_random_vs_normal_mcts(self: "Connect4GameTests") -> None:
+class GameHandlerTests(unittest.TestCase):
+    def test_random_vs_normal_mcts(self: "GameHandlerTests") -> None:
         config_handler = ConfigHandler.ConfigHandler()
         logger_handler = LoggerHandler.LoggerHandler(config_handler)
 
@@ -34,7 +34,7 @@ class Connect4GameTests(unittest.TestCase):
 
         self.assertAlmostEqual(np.sum(winners), -1 * number_of_games)
 
-    def test_normal_vs_hard_mcts(self: "Connect4GameTests") -> None:
+    def test_normal_vs_hard_mcts(self: "GameHandlerTests") -> None:
         config_handler = ConfigHandler.ConfigHandler()
         logger_handler = LoggerHandler.LoggerHandler(config_handler)
 
@@ -56,7 +56,7 @@ class Connect4GameTests(unittest.TestCase):
 
         self.assertLess(np.sum(winners), -number_of_games/3)
 
-    def test_normal_vs_god_mcts(self: "Connect4GameTests") -> None:
+    def test_normal_vs_god_mcts(self: "GameHandlerTests") -> None:
         config_handler = ConfigHandler.ConfigHandler()
         logger_handler = LoggerHandler.LoggerHandler(config_handler)
 
@@ -78,7 +78,7 @@ class Connect4GameTests(unittest.TestCase):
 
         self.assertAlmostEqual(np.sum(winners), -1 * number_of_games)
 
-    def test_god_vs_god_mcts_play_many_rounds(self: "Connect4GameTests") -> None:
+    def test_god_vs_god_mcts_play_many_rounds(self: "GameHandlerTests") -> None:
         config_handler = ConfigHandler.ConfigHandler()
         logger_handler = LoggerHandler.LoggerHandler(config_handler)
 
@@ -90,7 +90,7 @@ class Connect4GameTests(unittest.TestCase):
         game_handler = Connect4GameHandler.Connect4GameHandler(game, player0, player1, logger_handler, config_handler)
         number_of_games = 1
 
-        np.random.seed(72)
+        np.random.seed(72)  # noqa: NPY002
 
         #play game
         game_handler.play_n_games(number_of_games)

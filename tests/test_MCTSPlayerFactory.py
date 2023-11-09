@@ -1,4 +1,5 @@
 import unittest
+
 import numpy as np
 
 import Connect4Game
@@ -18,10 +19,9 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
         available_actions = game.get_available_actions()
         action = player.make_action(game, available_actions)
         self.assertIn(action, available_actions)
-        self.assertGreaterEqual(player.winning_probability, 0.5)
-        player.reset()
-        self.assertIsNone(player._tree)
-        self.assertIsNone(player.winning_probability)
+        self.assertIsNotNone(player.winning_probability)
+        if player.winning_probability is not None:
+            self.assertGreaterEqual(player.winning_probability, 0.5)
 
     def test_creation_of_hard_player(self: "MCTSPlayerFactoryTests") -> None:
         game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
@@ -32,7 +32,9 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
         available_actions = game.get_available_actions()
         action = player.make_action(game, available_actions)
         self.assertIn(action, available_actions)
-        self.assertGreaterEqual(player.winning_probability, 0.5)
+        self.assertIsNotNone(player.winning_probability)
+        if player.winning_probability is not None:
+            self.assertGreaterEqual(player.winning_probability, 0.5)
 
     def test_creation_of_god_player(self: "MCTSPlayerFactoryTests") -> None:
         game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
@@ -43,7 +45,9 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
         available_actions = game.get_available_actions()
         action = player.make_action(game, available_actions)
         self.assertIn(action, available_actions)
-        self.assertGreaterEqual(player.winning_probability, 0.5)
+        self.assertIsNotNone(player.winning_probability)
+        if player.winning_probability is not None:
+            self.assertGreaterEqual(player.winning_probability, 0.5)
 
     def test_mcts_player_reset(self: "MCTSPlayerFactoryTests") -> None:
         game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
@@ -60,7 +64,7 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
     def test_god_player_first_few_moves(self: "MCTSPlayerFactoryTests") -> None:
 
         for seed in range(420,423):
-            np.random.seed(seed)
+            np.random.seed(seed)  # noqa: NPY002
             #Create game and god player
             game_turn_handler = GameTurnHandler.GameTurnHandler([1, -1])
             game = Connect4Game.Connect4(game_turn_handler=game_turn_handler)
