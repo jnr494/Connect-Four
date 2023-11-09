@@ -157,7 +157,7 @@ def select_node_action_ucb1(
 
 
 @numba.njit
-def select_node_action_ucb1_numba(
+def select_node_action_ucb1_numba(  # noqa: PLR0913
     q_values: npt.NDArray[np.float64],
     no_visits: list[int],
     no_visits_actions: npt.NDArray[np.float64],
@@ -197,9 +197,9 @@ def get_action_probabilities(
     tree: Tree,
     temperature: float = 1,
 ) -> npt.NDArray[np.float64]:
-    start_state_hash = hash(game.get_board().tobytes())
+    start_state_hash = game.get_state_hash()
     current_node = tree.get_node(start_state_hash)
-    no_visits = np.zeros(game.no_cols)
+    no_visits = np.zeros(game.get_number_of_actions())
     no_visits[current_node["actions"]] = current_node["no_visits_actions"]
     no_visits_temperature = no_visits ** (1 / temperature)
     return no_visits_temperature / sum(no_visits_temperature)
@@ -221,8 +221,8 @@ def MonteCarloTreeSearch(
         tree = Tree()
 
     if evaluator is None:
-        no_cols = game.get_board().shape[1]
-        evaluator = lambda board: (np.zeros(no_cols) + 1 / no_cols, 0.5)  # noqa: E731
+        number_of_actions = game.get_number_of_actions()
+        evaluator = lambda game: (np.zeros(number_of_actions) + 1 / number_of_actions, 0.5)  # noqa: E731
 
     use_rave = rave_param is not None
 
@@ -239,15 +239,15 @@ def MonteCarloTreeSearch(
 
         ##selection
         while (not terminal_bool) and len(visited_state_hashes) <= max_depth:
-            current_state_hash = hash(game_copy.get_board().tobytes())
+            current_state_hash = game_copy.get_state_hash()
             visited_state_hashes.append(current_state_hash)
             no_visited_states = len(visited_state_hashes)
 
             ##expansion and stop selection
             if not tree.is_node_in_tree(current_state_hash):
-                clever_available_actions = game_copy.get_clever_available_actions_using_turn_handler()
+                clever_available_actions = game_copy.get_clever_available_actions()
                 # find priors and win_prediction from evaluator
-                priors, win_prediction = evaluator(game_copy.get_board())
+                priors, win_prediction = evaluator(game_copy)
                 filtered_priors = priors[clever_available_actions]
                 filtered_priors = filtered_priors / sum(filtered_priors)
 
@@ -281,7 +281,7 @@ def MonteCarloTreeSearch(
             new_row_heights.append(game.next_row_height[selected_action])
 
             # perform action
-            game_copy.place_disc_using_turn_handler(selected_action)
+            game_copy.place_disc(selected_action)
             # check if game is over
             terminal_bool, last_player, last_player_reward = check_game_over(game_copy)
 
@@ -292,12 +292,12 @@ def MonteCarloTreeSearch(
         if rollout_weight > 0:
             while not terminal_bool:
                 # get available actions
-                clever_available_actions = game_copy.get_clever_available_actions_using_turn_handler()
+                clever_available_actions = game_copy.get_clever_available_actions()
                 # get and simulate action
                 sim_action = rollout_player.make_action(game_copy, clever_available_actions)
                 actions.append(sim_action)
                 new_row_heights.append(game.next_row_height[sim_action])
-                game_copy.place_disc_using_turn_handler(sim_action)
+                game_copy.place_disc(sim_action)
 
                 # check if game is over
                 terminal_bool, last_player, last_player_reward = check_game_over(game_copy)

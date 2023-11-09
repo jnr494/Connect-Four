@@ -37,7 +37,7 @@ class DQPlayer(IPlayer):
         if uniform < self.epsilon:
             return self.RandomPlayer.make_action(game, available_actions)
         else:
-            q_values = self.QModel.predict(np.expand_dims(game.get_board().flatten(), axis=0))
+            q_values = self.QModel.predict(np.expand_dims(game._get_board().flatten(), axis=0))
             q_values_available = q_values[0, available_actions]
             action = available_actions[np.argmax(q_values_available)]
             return action
@@ -100,7 +100,7 @@ class MCTSPlayer(IPlayer):
 
         if self._mcts_config.randomize_action:
             action_probabilities = MonteCarloTreeSearch.get_action_probabilities(self._game, tree, temperature=1)
-            action = np.random.choice(self._game.no_cols, p=action_probabilities)
+            action = np.random.choice(self._game.get_number_of_actions(), p=action_probabilities)
             return action
         else:
             return best_action

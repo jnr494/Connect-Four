@@ -72,7 +72,7 @@ class PlayConnect4:
         # init plot of game
         self._game.plot_board_state(update=True)
 
-        for _ in range(self._game.no_cols * self._game.no_rows):
+        for _ in range(self._game.get_max_rounds()):
             # if human turn then ask human for action else ask AI player
             if self._game.get_current_player() == self.human_color_wish:
                 action = self._get_human_action()
@@ -81,7 +81,7 @@ class PlayConnect4:
                 self._log_player_action(action)
 
             # perform action and plot game
-            self.game_over = self._game.place_disc_using_turn_handler(action)
+            self.game_over = self._game.place_disc(action)
             self._game.plot_board_state(update=True)
 
             # Check if game is over
@@ -250,7 +250,7 @@ class PlayConnect4:
 
     # Get action from non-human player
     def _get_nonhuman_player_action(self: "PlayConnect4") -> int:
-        clever_available_actions = self._game.get_clever_available_actions_using_turn_handler()
+        clever_available_actions = self._game.get_clever_available_actions()
         action = self.player.make_action(self._game, clever_available_actions)
         return action
 

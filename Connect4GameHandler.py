@@ -21,7 +21,7 @@ class Connect4GameHandler:
         config_handler: ConfigHandler.ConfigHandler,
     ) -> None:
         self.game = game
-        self.game_size = self.game.no_rows * self.game.no_cols
+        self.game_size = self.game.get_max_rounds()
 
         self.players = [player0, player1]
         self.no_players = len(self.players)
@@ -43,7 +43,7 @@ class Connect4GameHandler:
             current_player_turn = self.game.get_current_player_turn()
 
             # get available (clever) actions
-            clever_available_actions = self.game.get_clever_available_actions_using_turn_handler()
+            clever_available_actions = self.game.get_clever_available_actions()
 
             # get new action
             action = self.players[current_player_turn].make_action(self.game, clever_available_actions)
@@ -52,7 +52,7 @@ class Connect4GameHandler:
             )
 
             # perform new action
-            is_game_won = self.game.place_disc_using_turn_handler(action)
+            is_game_won = self.game.place_disc(action)
 
             # check if game is done
             if is_game_won:

@@ -82,25 +82,25 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
             player = MCTSPlayerFactory.create_player(game, 1, -1, MCTSPlayerNames.god, config_handler, logger_handler)
 
             #First action should be 3
-            action = player.make_action(game, game.get_clever_available_actions_using_turn_handler())
+            action = player.make_action(game, game.get_clever_available_actions())
             self.assertEqual(action, 3)
-            game.place_disc_using_turn_handler(action)
+            game.place_disc(action)
             game.next_turn()
 
             #Manual action for opponent
             action = 3
-            game.place_disc_using_turn_handler(action)
+            game.place_disc(action)
             game.next_turn()
 
             #Second action should also be 3
-            action = player.make_action(game, game.get_clever_available_actions_using_turn_handler())
+            action = player.make_action(game, game.get_clever_available_actions())
             self.assertEqual(action, 3)
-            game.place_disc_using_turn_handler(action)
+            game.place_disc(action)
             game.next_turn()
 
             #Manual action for opponent
             action = 3
-            game.place_disc_using_turn_handler(action)
+            game.place_disc(action)
             game.next_turn()
 
 

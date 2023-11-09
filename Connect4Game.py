@@ -30,10 +30,16 @@ class Connect4:
 
         self.reset(game=game)
 
-    def place_disc_using_turn_handler(self: "Connect4", col: int) -> bool:
-        return self.place_disc(col, self._game_turn_handler.get_current_player_value())
+    def get_number_of_actions(self: "Connect4") -> int:
+        return self.no_cols
 
-    def place_disc(self: "Connect4", col: int, player: int) -> bool:
+    def get_max_rounds(self: "Connect4") -> int:
+        return self.no_cols * self.no_rows
+
+    def place_disc(self: "Connect4", col: int) -> bool:
+        return self._place_disc(col, self._game_turn_handler.get_current_player_value())
+
+    def _place_disc(self: "Connect4", col: int, player: int) -> bool:
         # place disc
         row = self.next_row_height[col]
         self._board[row, col] = player
@@ -48,14 +54,17 @@ class Connect4:
             return True
         else:
             # update current winning_possibilities
-            update_winning_possibilities(self.get_board(), self.current_winning_possibilities[player], player, col, row)
+            update_winning_possibilities(self._get_board(), self.current_winning_possibilities[player], player, col, row)
             return False
 
     def get_winner(self: "Connect4") -> int | None:
         return self._winner
 
-    def get_board(self: "Connect4") -> npt.NDArray[np.float64]:
+    def _get_board(self: "Connect4") -> npt.NDArray[np.float64]:
         return self._board
+
+    def get_state_hash(self: "Connect4") -> int:
+        return hash(self._get_board().tobytes())
 
     def next_turn(self: "Connect4") -> None:
         self._game_turn_handler.next_turn()
@@ -78,7 +87,7 @@ class Connect4:
             if hasattr(self, "_game_turn_handler"):
                 self._game_turn_handler.reset()
         else:
-            self._board = copy.deepcopy(game.get_board())
+            self._board = copy.deepcopy(game._get_board())
             self.next_row_height = copy.deepcopy(game.next_row_height)
             self.current_winning_possibilities = copy.deepcopy(game.current_winning_possibilities)
             self._winner = game._winner
@@ -91,15 +100,15 @@ class Connect4:
         return Connect4(self)
 
     def get_available_actions(self: "Connect4") -> list[int]:
-        return get_available_actions_numba(self.get_board())
+        return get_available_actions_numba(self._get_board())
 
-    def get_clever_available_actions_using_turn_handler(self: "Connect4") -> list[int]:
-        return self.get_clever_available_actions(
+    def get_clever_available_actions(self: "Connect4") -> list[int]:
+        return self._get_clever_available_actions(
             self._game_turn_handler.get_current_player_value(),
             self._game_turn_handler.get_next_player_value(),
         )
 
-    def get_clever_available_actions(self: "Connect4", player: int, next_player: int) -> list[int]:
+    def _get_clever_available_actions(self: "Connect4", player: int, next_player: int) -> list[int]:
         winning_actions = find_available_winning_actions(
             self.current_winning_possibilities[player],
             self.next_row_height,
@@ -136,7 +145,7 @@ class Connect4:
         update: bool = False,
     ) -> None:
         if board_state is None:
-            board_state = self.get_board()
+            board_state = self._get_board()
 
         no_rows, no_cols = board_state.shape
 
@@ -269,7 +278,7 @@ if __name__ == "__main__":
 
     game = Connect4()
     game.plot_board_state()
-    game.place_disc(2, 1)
+    game._place_disc(2, 1)
     input("you ready to see some more? ")
     game.plot_board_state()
     time.sleep(3)
