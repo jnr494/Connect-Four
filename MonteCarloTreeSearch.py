@@ -281,8 +281,12 @@ def MonteCarloTreeSearch(
                 current_node,
                 confidence_value,
                 rave_param,
-                max_bool=players[player_turn] == player,
+                max_bool = game_copy.get_current_player() == player,
             )
+
+            if (players[player_turn] == player) != (game_copy.get_current_player() == player):
+                print("ERROR! wrong player")
+
             actions.append(selected_action)
             new_row_heights.append(game.next_row_height[selected_action])
 
