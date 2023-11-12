@@ -298,17 +298,20 @@ def MonteCarloTreeSearch(
                     new_row_heights,
                 )
 
-                last_player_reward = (
-                    rollout_weight * last_player_reward + (1 - rollout_weight) * current_node["prior_win_prediction"]
-                )
-            else:
-                last_player_reward = current_node["prior_win_prediction"]
+            last_player_reward = (
+                rollout_weight * last_player_reward + (1 - rollout_weight) * current_node["prior_win_prediction"]
+            )
 
         player_reward = last_player_reward if (game_copy.get_last_player() == player) else 1 - last_player_reward
 
         ##backpropagation
         mcts_backpropagation(
-            tree, player_reward, visited_state_hashes, actions, new_row_heights, use_rave,
+            tree,
+            player_reward,
+            visited_state_hashes,
+            actions,
+            new_row_heights,
+            use_rave,
         )
 
     # find best action
