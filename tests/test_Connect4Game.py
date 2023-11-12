@@ -93,6 +93,7 @@ class Connect4GameTests(unittest.TestCase):
         game.next_turn()
 
         game_copy = game.copy()
+        self.assertEqual(game.get_last_player(),game_copy.get_last_player())
 
         game_copy.place_disc(3)
         game_copy.next_turn()
@@ -104,3 +105,23 @@ class Connect4GameTests(unittest.TestCase):
         self.assertEqual(game_copy._get_board()[0, 3], 1)
         self.assertEqual(game_copy._get_board()[1, 3], -1)
         self.assertEqual(game_copy.get_current_player(), 1)
+
+    def test_last_player(self: "Connect4GameTests") -> None:
+        game_turn_handler = GameTurnHandler([1, -1])
+        game = Connect4(game_turn_handler=game_turn_handler)
+
+        self.assertIsNone(game.get_last_player())
+
+        game.place_disc(3)
+        game.next_turn()
+
+        self.assertEqual(game.get_last_player(), 1)
+
+        game.place_disc(3)
+        game.next_turn()
+
+        self.assertEqual(game.get_last_player(), -1)
+
+        game.next_turn()
+
+        self.assertEqual(game.get_last_player(), -1)

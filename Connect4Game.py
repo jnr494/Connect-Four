@@ -14,6 +14,7 @@ class Connect4:
     _winner: int | None
     _board: npt.NDArray[np.float64]
     next_row_height: npt.NDArray[np.float64]
+    _last_player: int | None
 
     def __init__(
         self: "Connect4",
@@ -42,8 +43,11 @@ class Connect4:
         # place disc
         row = self.next_row_height[col]
         self._board[row, col] = player
+
         # update next_row_height
         self.next_row_height[col] += 1
+        #update last_player
+        self._last_player = player
 
         # check for win
         if self._winner is not None:
@@ -53,8 +57,17 @@ class Connect4:
             return True
         else:
             # update current winning_possibilities
-            update_winning_possibilities(self._get_board(), self._current_winning_possibilities[player], player, col, row)
+            update_winning_possibilities(
+                self._get_board(),
+                self._current_winning_possibilities[player],
+                player,
+                col,
+                row,
+            )
             return False
+
+    def get_last_player(self: "Connect4") -> int | None:
+        return self._last_player
 
     def get_winner(self: "Connect4") -> int | None:
         return self._winner
@@ -83,6 +96,7 @@ class Connect4:
                 -1: np.zeros((self._no_rows, self._no_cols)),
             }
             self._winner = None
+            self._last_player = None
             if hasattr(self, "_game_turn_handler"):
                 self._game_turn_handler.reset()
         else:
@@ -90,6 +104,7 @@ class Connect4:
             self.next_row_height = copy.deepcopy(game.next_row_height)
             self._current_winning_possibilities = copy.deepcopy(game._current_winning_possibilities)
             self._winner = game._winner
+            self._last_player = game._last_player
             self._game_turn_handler = game.get_turn_handler().copy()
 
     def get_turn_handler(self: "Connect4") -> GameTurnHandler:
