@@ -290,16 +290,13 @@ def MonteCarloTreeSearch(
 
         ##simulation
         if not terminal_bool:
-            if rollout_weight > 0:
-                last_player_reward = mcts_rollout(
-                    game_copy,
-                    rollout_player,
-                    actions,
-                    new_row_heights,
-                )
-
-            last_player_reward = (
-                rollout_weight * last_player_reward + (1 - rollout_weight) * current_node["prior_win_prediction"]
+            last_player_reward = mcts_simulation(
+                game_copy,
+                rollout_weight,
+                rollout_player,
+                actions,
+                new_row_heights,
+                current_node,
             )
 
         player_reward = last_player_reward if (game_copy.get_last_player() == player) else 1 - last_player_reward
@@ -320,6 +317,24 @@ def MonteCarloTreeSearch(
     winning_probability = start_node["q_values"][start_node["actions_idx"][best_root_action]]
     return best_root_action, tree, winning_probability
 
+def mcts_simulation(
+    game: Connect4Game.Connect4,
+    rollout_weight: float,
+    rollout_player: IPlayer,
+    actions: list[int],
+    new_row_heights: list[int],
+    current_node: dict,
+) -> float:
+    if rollout_weight > 0:
+        reward = mcts_rollout(
+            game,
+            rollout_player,
+            actions,
+            new_row_heights,
+        )
+
+    reward = rollout_weight * reward + (1 - rollout_weight) * current_node["prior_win_prediction"]
+    return reward
 
 def mcts_rollout(
     game: Connect4Game.Connect4,
@@ -345,7 +360,6 @@ def mcts_rollout(
         game.next_turn()
 
     return last_player_reward
-
 
 def mcts_backpropagation(
     tree: Tree,
