@@ -292,7 +292,10 @@ def MonteCarloTreeSearch(
         if not terminal_bool:
             if rollout_weight > 0:
                 last_player_reward = mcts_rollout(
-                    game_copy, rollout_player, actions, new_row_heights,
+                    game_copy,
+                    rollout_player,
+                    actions,
+                    new_row_heights,
                 )
 
                 last_player_reward = (
@@ -301,19 +304,12 @@ def MonteCarloTreeSearch(
             else:
                 last_player_reward = current_node["prior_win_prediction"]
 
-        ##backpropagation
         player_reward = last_player_reward if (game_copy.get_last_player() == player) else 1 - last_player_reward
 
-        # update player rewards
-        for idx in range(0, len(visited_state_hashes)):
-            tree.update_node(
-                visited_state_hashes[idx],
-                actions[idx],
-                player_reward,
-                following_actions=np.array(actions[idx + 2 :: 2]),
-                following_row_heights=np.array(new_row_heights[idx + 2 :: 2]),
-                use_rave=use_rave,
-            )
+        ##backpropagation
+        mcts_backpropagation(
+            tree, player_reward, visited_state_hashes, actions, new_row_heights, use_rave,
+        )
 
     # find best action
     start_node = tree.get_node(visited_state_hashes[0])
@@ -346,3 +342,23 @@ def mcts_rollout(
         game.next_turn()
 
     return last_player_reward
+
+
+def mcts_backpropagation(
+    tree: Tree,
+    reward: float,
+    visited_states: list[int],
+    actions: list[int],
+    new_row_heights: list[int],
+    use_rave: bool,
+) -> None:
+    # update player rewards
+    for idx in range(0, len(visited_states)):
+        tree.update_node(
+            visited_states[idx],
+            actions[idx],
+            reward,
+            following_actions=np.array(actions[idx + 2 :: 2]),
+            following_row_heights=np.array(new_row_heights[idx + 2 :: 2]),
+            use_rave=use_rave,
+        )
