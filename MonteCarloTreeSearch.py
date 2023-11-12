@@ -289,29 +289,20 @@ def MonteCarloTreeSearch(
             game_copy.next_turn()
 
         ##simulation
-        if rollout_weight > 0:
-            while not terminal_bool:
-                # get available actions
-                clever_available_actions = game_copy.get_clever_available_actions()
-                # get and simulate action
-                sim_action = rollout_player.make_action(game_copy, clever_available_actions)
-                actions.append(sim_action)
-                new_row_heights.append(game.next_row_height[sim_action])
-                game_copy.place_disc(sim_action)
+        if not terminal_bool:
+            if rollout_weight > 0:
+                last_player_reward = mcts_rollout(
+                    game_copy, rollout_player, actions, new_row_heights,
+                )
 
-                # check if game is over
-                terminal_bool, last_player, last_player_reward = check_game_over(game_copy)
-                # update turn
-                game_copy.next_turn()
-
-            last_player_reward = (
-                rollout_weight * last_player_reward + (1 - rollout_weight) * current_node["prior_win_prediction"]
-            )
-        else:
-            last_player_reward = current_node["prior_win_prediction"]
+                last_player_reward = (
+                    rollout_weight * last_player_reward + (1 - rollout_weight) * current_node["prior_win_prediction"]
+                )
+            else:
+                last_player_reward = current_node["prior_win_prediction"]
 
         ##backpropagation
-        player_reward = last_player_reward if (last_player == player) else 1 - last_player_reward
+        player_reward = last_player_reward if (game_copy.get_last_player() == player) else 1 - last_player_reward
 
         # update player rewards
         for idx in range(0, len(visited_state_hashes)):
@@ -329,3 +320,29 @@ def MonteCarloTreeSearch(
     best_root_action = select_node_action_ucb1(start_node, 0, None)
     winning_probability = start_node["q_values"][start_node["actions_idx"][best_root_action]]
     return best_root_action, tree, winning_probability
+
+
+def mcts_rollout(
+    game: Connect4Game.Connect4,
+    rollout_player: IPlayer,
+    actions: list[int],
+    new_row_heights: list[int],
+) -> float:
+    terminal_bool, last_player, last_player_reward = check_game_over(game)
+    while not terminal_bool:
+        # get available actions
+        clever_available_actions = game.get_clever_available_actions()
+
+        # get and simulate action
+        sim_action = rollout_player.make_action(game, clever_available_actions)
+        actions.append(sim_action)
+        new_row_heights.append(game.next_row_height[sim_action])
+        game.place_disc(sim_action)
+
+        # check if game is over
+        terminal_bool, last_player, last_player_reward = check_game_over(game)
+
+        # update turn
+        game.next_turn()
+
+    return last_player_reward
