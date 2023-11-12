@@ -11,7 +11,7 @@ class Connect4GameTests(unittest.TestCase):
         game = Connect4()
 
         # Assert board is array of zeros of correct size
-        self.assertEqual(np.array_equal(game._get_board(), np.zeros((game._no_rows, game._no_cols))), True)
+        self.assertTrue(np.array_equal(game._get_board(), np.zeros((game._no_rows, game._no_cols))))
 
     def test_place_discs(self: "Connect4GameTests") -> None:
         game_turn_handler = GameTurnHandler([1, -1])
@@ -105,6 +105,21 @@ class Connect4GameTests(unittest.TestCase):
         self.assertEqual(game_copy._get_board()[0, 3], 1)
         self.assertEqual(game_copy._get_board()[1, 3], -1)
         self.assertEqual(game_copy.get_current_player(), 1)
+
+    def test_reset(self: "Connect4GameTests") -> None:
+        game_turn_handler = GameTurnHandler([1, -1])
+        game = Connect4(game_turn_handler=game_turn_handler)
+
+        game.place_disc(3)
+        game.next_turn()
+
+        game.reset()
+
+        self.assertIsNone(game.get_last_player())
+        self.assertIsNone(game.get_winner())
+        self.assertTrue(np.array_equal(game._get_board(), np.zeros((game._no_rows, game._no_cols))), True)
+        self.assertTrue(np.array_equal(game.next_row_height, np.zeros((game._no_cols,), dtype=int)), True)
+        self.assertEqual(game_turn_handler.get_current_player_value(), 1)
 
     def test_last_player(self: "Connect4GameTests") -> None:
         game_turn_handler = GameTurnHandler([1, -1])
