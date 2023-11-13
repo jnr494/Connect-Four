@@ -243,6 +243,9 @@ def MonteCarloTreeSearch(
             visited_state_hashes.append(current_state_hash)
             no_visited_states = len(visited_state_hashes)
 
+            if no_visited_states > 1:
+                    tree.update_next_state_hash(visited_state_hashes[-2], actions[-1], current_state_hash)
+
             ##expansion and stop selection
             if not tree.is_node_in_tree(current_state_hash):
                 clever_available_actions = game_copy.get_clever_available_actions()
@@ -260,12 +263,7 @@ def MonteCarloTreeSearch(
                     win_prediction,
                 )
                 current_node = tree.get_node(current_state_hash)
-                if no_visited_states > 1:
-                    tree.update_next_state_hash(visited_state_hashes[-2], actions[-1], current_state_hash)
                 break
-
-            if no_visited_states > 1:
-                tree.update_next_state_hash(visited_state_hashes[-2], actions[-1], current_state_hash)
 
             ##selection continued
             # get node and find ucb1 optimal action
