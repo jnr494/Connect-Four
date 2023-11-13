@@ -248,21 +248,7 @@ def MonteCarloTreeSearch(
 
             ##expansion and stop selection
             if not tree.is_node_in_tree(current_state_hash):
-                clever_available_actions = game_copy.get_clever_available_actions()
-                # find priors and win_prediction from evaluator
-                priors, win_prediction = evaluator(game_copy)
-                filtered_priors = priors[clever_available_actions]
-                filtered_priors = filtered_priors / sum(filtered_priors)
-
-                next_row_heights = game_copy.next_row_height[clever_available_actions]
-                tree.new_node(
-                    current_state_hash,
-                    clever_available_actions,
-                    next_row_heights,
-                    filtered_priors,
-                    win_prediction,
-                )
-                current_node = tree.get_node(current_state_hash)
+                current_node = mcts_expansion(game_copy, tree, evaluator, current_state_hash)
                 break
 
             ##selection continued
@@ -314,6 +300,29 @@ def MonteCarloTreeSearch(
     best_root_action = select_node_action_ucb1(start_node, 0, None)
     winning_probability = start_node["q_values"][start_node["actions_idx"][best_root_action]]
     return best_root_action, tree, winning_probability
+
+def mcts_expansion(
+        game: Connect4Game.Connect4,
+        tree: Tree,
+        evaluator: Callable,
+        state_hash: int,
+        ) -> dict:
+    clever_available_actions = game.get_clever_available_actions()
+    # find priors and win_prediction from evaluator
+    priors, win_prediction = evaluator(game)
+    filtered_priors = priors[clever_available_actions]
+    filtered_priors = filtered_priors / sum(filtered_priors)
+
+    next_row_heights = game.next_row_height[clever_available_actions]
+    tree.new_node(
+        state_hash,
+        clever_available_actions,
+        next_row_heights,
+        filtered_priors,
+        win_prediction,
+    )
+    current_node = tree.get_node(state_hash)
+    return current_node
 
 def mcts_simulation(
     game: Connect4Game.Connect4,
