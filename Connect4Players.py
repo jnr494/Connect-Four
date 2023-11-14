@@ -1,7 +1,9 @@
 import logging
+from typing import Tuple
 
 import numba
 import numpy as np
+import numpy.typing as npt
 
 import MonteCarloTreeSearch
 from ConfigHandler import MCTSPlayerConfig
@@ -54,7 +56,7 @@ class MCTSPlayer(IPlayer):
     _mcts_config: MCTSPlayerConfig
     winning_probability: float | None
     _random_player: RandomPlayer = RandomPlayer()
-    _tree: MonteCarloTreeSearch.Tree | None
+    _tree: MonteCarloTreeSearch.Tree
     _logger: logging.Logger
 
     def __init__(
@@ -76,6 +78,9 @@ class MCTSPlayer(IPlayer):
         self.reset()
 
     def make_action(self: "MCTSPlayer", game: Connect4, available_actions: list[int]) -> int:
+        if not self._mcts_config.reuse_tree:
+            self._tree = MonteCarloTreeSearch.Tree()
+
         self._game = game
         # important that env_state comes from game.
         best_action, tree, winning_probability = MonteCarloTreeSearch.MonteCarloTreeSearch(
@@ -87,6 +92,7 @@ class MCTSPlayer(IPlayer):
             self._mcts_config.rave_param,
             self._random_player,
             self._tree,
+            self._evaluator,
         )
 
         self.winning_probability = winning_probability
@@ -94,9 +100,6 @@ class MCTSPlayer(IPlayer):
             self._logger.debug(
                 f"Name=[{self._mcts_config.name}] found best action=[{best_action}] has estimated probability of winning [{round(self.winning_probability*100,2)}%]",  # noqa: E501
             )
-
-        if self._mcts_config.reuse_tree:
-            self._tree = tree
 
         if self._mcts_config.randomize_action:
             action_probabilities = MonteCarloTreeSearch.get_action_probabilities(self._game, tree, temperature=1)
@@ -106,7 +109,8 @@ class MCTSPlayer(IPlayer):
             return best_action
 
     def reset(self: "MCTSPlayer") -> None:
-        self._tree = None
+        self._evaluator = standard_evaluator
+        self._tree = MonteCarloTreeSearch.Tree()
         self.winning_probability = None
 
     def get_name(self: "MCTSPlayer") -> str:
@@ -115,3 +119,11 @@ class MCTSPlayer(IPlayer):
 @numba.njit
 def make_random_choice(available_actions: list[int]) -> int:
     return np.random.choice(available_actions)  # noqa: NPY002
+
+def standard_evaluator(game: Connect4) -> Tuple[npt.NDArray[np.float64], float]:
+    number_of_actions = game.get_number_of_actions()
+    return standard_evaluator_numba(number_of_actions)
+
+@numba.njit
+def standard_evaluator_numba(number_of_actions: int) -> Tuple[npt.NDArray[np.float64], float]:
+    return (np.ones(number_of_actions) / number_of_actions, 0.5)

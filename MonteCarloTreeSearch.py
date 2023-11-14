@@ -213,17 +213,10 @@ def MonteCarloTreeSearch(
     confidence_value: float,
     rave_param: Optional[float],
     rollout_player: IPlayer,
-    tree: Optional[Tree] = None,
-    evaluator: Optional[Callable] = None,
+    tree: Tree,
+    evaluator: Callable,
     rollout_weight: float = 1,
 ):
-    if tree is None:
-        tree = Tree()
-
-    if evaluator is None:
-        number_of_actions = game.get_number_of_actions()
-        evaluator = lambda game: (np.zeros(number_of_actions) + 1 / number_of_actions, 0.5)  # noqa: E731
-
     use_rave = rave_param is not None
 
     for _ in range(max_count):
