@@ -232,36 +232,23 @@ def MonteCarloTreeSearch(
         # Reset game and variables for new round
         game_copy.reset(game)
         visited_state_hashes: list[int] = []
-        no_visited_states = len(visited_state_hashes)
         actions: list[int] = []
         new_row_heights: list[int] = []
         terminal_bool = False
 
         ##selection
-        while (not terminal_bool) and len(visited_state_hashes) <= max_depth:
-            current_state_hash = game_copy.get_state_hash()
-            visited_state_hashes.append(current_state_hash)
-            no_visited_states = len(visited_state_hashes)
-
-            if no_visited_states > 1:
-                tree.update_next_state_hash(visited_state_hashes[-2], actions[-1], current_state_hash)
-
-            ##expansion and stop selection
-            if not tree.is_node_in_tree(current_state_hash):
-                current_node = mcts_expansion(game_copy, tree, evaluator, current_state_hash)
-                break
-
-            ##selection continued
-            terminal_bool, last_player_reward = mcts_selection_find_and_perform_action(
-                game_copy,
-                tree,
-                confidence_value,
-                rave_param,
-                player,
-                current_state_hash,
-                actions,
-                new_row_heights,
-            )
+        terminal_bool, last_player_reward, current_node = mcts_selection(
+            game_copy,
+            tree,
+            confidence_value,
+            rave_param,
+            max_depth,
+            player,
+            evaluator,
+            actions,
+            new_row_heights,
+            visited_state_hashes,
+        )
 
         ##simulation
         if not terminal_bool:
@@ -292,6 +279,48 @@ def MonteCarloTreeSearch(
     winning_probability = start_node["q_values"][start_node["actions_idx"][best_root_action]]
     return best_root_action, tree, winning_probability
 
+def mcts_selection(
+        game: Connect4Game.Connect4,
+        tree: Tree,
+        confidence_value: float,
+        rave_param: float | None,
+        max_depth: int,
+        player: int,
+        evaluator: Callable,
+        actions: list[int],
+        new_row_heights: list[int],
+        visited_state_hashes: list[int],
+    ) -> Tuple[bool, float, dict]:
+
+    terminal_bool, last_player_reward = check_game_over(game)
+
+    while (not terminal_bool) and len(visited_state_hashes) <= max_depth:
+        current_state_hash = game.get_state_hash()
+        visited_state_hashes.append(current_state_hash)
+        no_visited_states = len(visited_state_hashes)
+
+        if no_visited_states > 1:
+            tree.update_next_state_hash(visited_state_hashes[-2], actions[-1], current_state_hash)
+
+        ##expansion and stop selection
+        if not tree.is_node_in_tree(current_state_hash):
+            current_node = mcts_expansion(game, tree, evaluator, current_state_hash)
+            break
+        else:
+            current_node = tree.get_node(current_state_hash)
+
+        ##selection continued
+        terminal_bool, last_player_reward = mcts_selection_find_and_perform_action(
+            game,
+            confidence_value,
+            rave_param,
+            player,
+            current_node,
+            actions,
+            new_row_heights,
+        )
+
+    return terminal_bool, last_player_reward, current_node
 
 def mcts_expansion(
     game: Connect4Game.Connect4,
@@ -319,16 +348,14 @@ def mcts_expansion(
 
 def mcts_selection_find_and_perform_action(
     game: Connect4Game.Connect4,
-    tree: Tree,
     confidence_value: float,
     rave_param: float | None,
     player: int,
-    current_state_hash: int,
+    current_node: dict,
     actions: list[int],
     new_row_heights: list[int],
 ) -> Tuple[bool, float]:
     # get node and find ucb1 optimal action
-    current_node = tree.get_node(current_state_hash)
     selected_action = select_node_action_ucb1(
         current_node,
         confidence_value,
