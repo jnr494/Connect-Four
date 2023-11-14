@@ -244,7 +244,7 @@ def MonteCarloTreeSearch(
             no_visited_states = len(visited_state_hashes)
 
             if no_visited_states > 1:
-                    tree.update_next_state_hash(visited_state_hashes[-2], actions[-1], current_state_hash)
+                tree.update_next_state_hash(visited_state_hashes[-2], actions[-1], current_state_hash)
 
             ##expansion and stop selection
             if not tree.is_node_in_tree(current_state_hash):
@@ -252,25 +252,16 @@ def MonteCarloTreeSearch(
                 break
 
             ##selection continued
-            # get node and find ucb1 optimal action
-            current_node = tree.get_node(current_state_hash)
-            selected_action = select_node_action_ucb1(
-                current_node,
+            terminal_bool, last_player_reward = mcts_selection_find_and_perform_action(
+                game_copy,
+                tree,
                 confidence_value,
                 rave_param,
-                max_bool=game_copy.get_current_player() == player,
+                player,
+                current_state_hash,
+                actions,
+                new_row_heights,
             )
-
-            actions.append(selected_action)
-            new_row_heights.append(game.next_row_height[selected_action])
-
-            # perform action
-            game_copy.place_disc(selected_action)
-            # check if game is over
-            terminal_bool, last_player_reward = check_game_over(game_copy)
-
-            # update turn
-            game_copy.next_turn()
 
         ##simulation
         if not terminal_bool:
@@ -301,12 +292,13 @@ def MonteCarloTreeSearch(
     winning_probability = start_node["q_values"][start_node["actions_idx"][best_root_action]]
     return best_root_action, tree, winning_probability
 
+
 def mcts_expansion(
-        game: Connect4Game.Connect4,
-        tree: Tree,
-        evaluator: Callable,
-        state_hash: int,
-        ) -> dict:
+    game: Connect4Game.Connect4,
+    tree: Tree,
+    evaluator: Callable,
+    state_hash: int,
+) -> dict:
     clever_available_actions = game.get_clever_available_actions()
     # find priors and win_prediction from evaluator
     priors, win_prediction = evaluator(game)
@@ -323,6 +315,40 @@ def mcts_expansion(
     )
     current_node = tree.get_node(state_hash)
     return current_node
+
+
+def mcts_selection_find_and_perform_action(
+    game: Connect4Game.Connect4,
+    tree: Tree,
+    confidence_value: float,
+    rave_param: float | None,
+    player: int,
+    current_state_hash: int,
+    actions: list[int],
+    new_row_heights: list[int],
+) -> Tuple[bool, float]:
+    # get node and find ucb1 optimal action
+    current_node = tree.get_node(current_state_hash)
+    selected_action = select_node_action_ucb1(
+        current_node,
+        confidence_value,
+        rave_param,
+        max_bool=game.get_current_player() == player,
+    )
+
+    actions.append(selected_action)
+    new_row_heights.append(game.next_row_height[selected_action])
+
+    # perform action
+    game.place_disc(selected_action)
+    # check if game is over
+    terminal_bool, last_player_reward = check_game_over(game)
+
+    # update turn
+    game.next_turn()
+
+    return terminal_bool, last_player_reward
+
 
 def mcts_simulation(
     game: Connect4Game.Connect4,
@@ -342,6 +368,7 @@ def mcts_simulation(
 
     reward = rollout_weight * reward + (1 - rollout_weight) * current_node["prior_win_prediction"]
     return reward
+
 
 def mcts_rollout(
     game: Connect4Game.Connect4,
@@ -367,6 +394,7 @@ def mcts_rollout(
         game.next_turn()
 
     return last_player_reward
+
 
 def mcts_backpropagation(
     tree: Tree,
