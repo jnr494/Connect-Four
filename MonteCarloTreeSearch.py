@@ -99,6 +99,18 @@ class Tree:
         prev_action_idx = prev_node["actions_idx"][prev_action]
         prev_node["next_state_hash"][prev_action_idx] = current_state_hash
 
+    def get_action_probabilities(
+        self: "Tree",
+        game: Connect4Game.Connect4,
+        temperature: float = 1,
+    ) -> npt.NDArray[np.float64]:
+        start_state_hash = game.get_state_hash()
+        current_node = self.get_node(start_state_hash)
+        no_visits = np.zeros(game.get_number_of_actions())
+        no_visits[current_node["actions"]] = current_node["no_visits_actions"]
+        no_visits_temperature = no_visits ** (1 / temperature)
+        return no_visits_temperature / sum(no_visits_temperature)
+
 
 @numba.njit
 def find_first_in_array(array: npt.ArrayLike, element: float) -> float:
@@ -107,102 +119,6 @@ def find_first_in_array(array: npt.ArrayLike, element: float) -> float:
         return first_following_action_idx[0]
     else:
         return -1
-
-
-def check_game_over(game: Connect4Game.Connect4) -> Tuple[bool, float]:
-    reward: float
-    game_won: bool
-    terminal_bool: bool
-
-    game_won = game.get_current_player() == game.get_winner()
-    if game_won:
-        terminal_bool = True
-        reward = 1.0
-    elif len(game.get_available_actions()) == 0:
-        # check if game is draw
-        terminal_bool = True
-        reward = 0.5
-    else:
-        terminal_bool = False
-        reward = 0.0
-
-    return terminal_bool, reward
-
-
-def select_node_action_ucb1(
-    node: dict,
-    confidence_value: float,
-    rave_param: Optional[float],
-    max_bool: bool = True,
-) -> int:
-    if rave_param is None:
-        rave_bool = False
-        rave_param = 0
-    else:
-        rave_bool = True
-
-    return select_node_action_ucb1_numba(
-        node["q_values"],
-        node["no_visits"],
-        node["no_visits_actions"],
-        confidence_value,
-        node["amaf_q_values"],
-        node["amaf_no_visits_actions"],
-        rave_bool,
-        rave_param,
-        node["actions"],
-        max_bool,
-        node["priors"],
-    )
-
-
-@numba.njit
-def select_node_action_ucb1_numba(  # noqa: PLR0913
-    q_values: npt.NDArray[np.float64],
-    no_visits: list[int],
-    no_visits_actions: npt.NDArray[np.float64],
-    confidence_value: float,
-    amaf_q_values: list[int],
-    amaf_no_visits_actions: npt.NDArray[np.float64],
-    rave_bool: bool,
-    rave_param: float,
-    actions: list[int],
-    max_bool: bool,
-    priors: npt.NDArray[np.float64],
-) -> int:
-    exploration_term = priors * np.sqrt(no_visits) / (no_visits_actions + 1)
-
-    if rave_bool:
-        beta = amaf_no_visits_actions / (
-            no_visits_actions + amaf_no_visits_actions + 4 * no_visits_actions * amaf_no_visits_actions * rave_param**2
-        )
-        adjusted_q_values = (1 - beta) * q_values + beta * amaf_q_values
-    else:
-        adjusted_q_values = q_values
-
-    if max_bool:
-        ucb1_vals = adjusted_q_values + confidence_value * exploration_term
-        select_action_idx = np.argmax(ucb1_vals)
-    else:
-        ucb1_vals = adjusted_q_values - confidence_value * exploration_term
-        select_action_idx = np.argmin(ucb1_vals)
-
-    select_action = actions[select_action_idx]
-
-    return select_action
-
-
-def get_action_probabilities(
-    game: Connect4Game.Connect4,
-    tree: Tree,
-    temperature: float = 1,
-) -> npt.NDArray[np.float64]:
-    start_state_hash = game.get_state_hash()
-    current_node = tree.get_node(start_state_hash)
-    no_visits = np.zeros(game.get_number_of_actions())
-    no_visits[current_node["actions"]] = current_node["no_visits_actions"]
-    no_visits_temperature = no_visits ** (1 / temperature)
-    return no_visits_temperature / sum(no_visits_temperature)
 
 
 def MonteCarloTreeSearch(
@@ -458,3 +374,85 @@ def mcts_backpropagation(
             following_row_heights=np.array(new_row_heights[idx + 2 :: 2]),
             use_rave=use_rave,
         )
+
+def check_game_over(game: Connect4Game.Connect4) -> Tuple[bool, float]:
+    reward: float
+    game_won: bool
+    terminal_bool: bool
+
+    game_won = game.get_current_player() == game.get_winner()
+    if game_won:
+        terminal_bool = True
+        reward = 1.0
+    elif len(game.get_available_actions()) == 0:
+        # check if game is draw
+        terminal_bool = True
+        reward = 0.5
+    else:
+        terminal_bool = False
+        reward = 0.0
+
+    return terminal_bool, reward
+
+
+def select_node_action_ucb1(
+    node: dict,
+    confidence_value: float,
+    rave_param: Optional[float],
+    max_bool: bool = True,
+) -> int:
+    if rave_param is None:
+        rave_bool = False
+        rave_param = 0
+    else:
+        rave_bool = True
+
+    return select_node_action_ucb1_numba(
+        node["q_values"],
+        node["no_visits"],
+        node["no_visits_actions"],
+        confidence_value,
+        node["amaf_q_values"],
+        node["amaf_no_visits_actions"],
+        rave_bool,
+        rave_param,
+        node["actions"],
+        max_bool,
+        node["priors"],
+    )
+
+
+@numba.njit
+def select_node_action_ucb1_numba(  # noqa: PLR0913
+    q_values: npt.NDArray[np.float64],
+    no_visits: list[int],
+    no_visits_actions: npt.NDArray[np.float64],
+    confidence_value: float,
+    amaf_q_values: list[int],
+    amaf_no_visits_actions: npt.NDArray[np.float64],
+    rave_bool: bool,
+    rave_param: float,
+    actions: list[int],
+    max_bool: bool,
+    priors: npt.NDArray[np.float64],
+) -> int:
+    exploration_term = priors * np.sqrt(no_visits) / (no_visits_actions + 1)
+
+    if rave_bool:
+        beta = amaf_no_visits_actions / (
+            no_visits_actions + amaf_no_visits_actions + 4 * no_visits_actions * amaf_no_visits_actions * rave_param**2
+        )
+        adjusted_q_values = (1 - beta) * q_values + beta * amaf_q_values
+    else:
+        adjusted_q_values = q_values
+
+    if max_bool:
+        ucb1_vals = adjusted_q_values + confidence_value * exploration_term
+        select_action_idx = np.argmax(ucb1_vals)
+    else:
+        ucb1_vals = adjusted_q_values - confidence_value * exploration_term
+        select_action_idx = np.argmin(ucb1_vals)
+
+    select_action = actions[select_action_idx]
+
+    return select_action

@@ -79,7 +79,7 @@ class MCTSPlayer(IPlayer):
 
     def make_action(self: "MCTSPlayer", game: Connect4, available_actions: list[int]) -> int:
         if not self._mcts_config.reuse_tree:
-            self._tree = MonteCarloTreeSearch.Tree()
+            self._get_new_tree()
 
         self._game = game
         # important that env_state comes from game.
@@ -102,7 +102,7 @@ class MCTSPlayer(IPlayer):
             )
 
         if self._mcts_config.randomize_action:
-            action_probabilities = MonteCarloTreeSearch.get_action_probabilities(self._game, tree, temperature=1)
+            action_probabilities = tree.get_action_probabilities(self._game, temperature=1)
             action = np.random.choice(self._game.get_number_of_actions(), p=action_probabilities)
             return action
         else:
@@ -110,11 +110,14 @@ class MCTSPlayer(IPlayer):
 
     def reset(self: "MCTSPlayer") -> None:
         self._evaluator = standard_evaluator
-        self._tree = MonteCarloTreeSearch.Tree()
         self.winning_probability = None
+        self._get_new_tree()
 
     def get_name(self: "MCTSPlayer") -> str:
         return self._name
+
+    def _get_new_tree(self: "MCTSPlayer") -> None:
+        self._tree = MonteCarloTreeSearch.Tree()
 
 @numba.njit
 def make_random_choice(available_actions: list[int]) -> int:
