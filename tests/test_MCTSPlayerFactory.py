@@ -68,6 +68,7 @@ class MCTSPlayerFactoryTests(unittest.TestCase):
         _ = player.make_action(game, available_actions)
         player.reset()
         self.assertEqual(player._tree.nodes, {})
+        self.assertEqual(player._mcts_engine._tree.nodes, {})
         self.assertIsNone(player.winning_probability)
 
     def test_god_player_first_few_moves(self: "MCTSPlayerFactoryTests") -> None:

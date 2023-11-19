@@ -54,6 +54,7 @@ class MCTSPlayerConfig:
     rave_param: float | None
     reuse_tree: bool
     randomize_action: bool
+    rollout_weight: float
     _config_section: str
     _config_section_default: str
     _config_handler: ConfigHandler
@@ -70,6 +71,7 @@ class MCTSPlayerConfig:
         self._get_rave_param()
         self._get_reuse_tree()
         self._get_randomize_action()
+        self._get_rollout_weight()
 
     def _get_max_count(self: "MCTSPlayerConfig") -> None:
         max_count = self._config_handler.get_config_or_alternative(
@@ -120,6 +122,13 @@ class MCTSPlayerConfig:
         )
         self.randomize_action = randomize_action
 
+    def _get_rollout_weight(self: "MCTSPlayerConfig") -> None:
+        rollout_weight = self._config_handler.get_config_or_alternative(
+            self._config_section, self._config_section_default, "rollout_weight",
+        )
+        rollout_weight_float = ConfigTypeConverter.to_float(rollout_weight)
+        if rollout_weight_float is not None:
+            self.rollout_weight = rollout_weight_float  # Okay for rav_param to be None
 
 class LoggerConfig:
     log_path: str

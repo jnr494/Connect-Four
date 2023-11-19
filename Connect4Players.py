@@ -5,7 +5,8 @@ import numba
 import numpy as np
 import numpy.typing as npt
 
-import MonteCarloTreeSearch
+from MonteCarloTreeSearch import MonteCarloTreeSearchEngine
+from Tree import Tree
 from ConfigHandler import MCTSPlayerConfig
 from Connect4Game import Connect4
 from IPlayer import IPlayer
@@ -55,9 +56,10 @@ class MCTSPlayer(IPlayer):
     _next_player: int
     _mcts_config: MCTSPlayerConfig
     winning_probability: float | None
-    _random_player: RandomPlayer = RandomPlayer()
-    _tree: MonteCarloTreeSearch.Tree
+    _rollout_player: RandomPlayer = RandomPlayer()
+    _tree: Tree
     _logger: logging.Logger
+    _mcts_engine: MonteCarloTreeSearchEngine
 
     def __init__(
         self: "MCTSPlayer",
@@ -82,50 +84,61 @@ class MCTSPlayer(IPlayer):
             self._get_new_tree()
 
         self._game = game
-        # important that env_state comes from game.
-        best_action, tree, winning_probability = MonteCarloTreeSearch.MonteCarloTreeSearch(
-            self._game,
-            self._player,
-            self._mcts_config.max_count,
-            self._mcts_config.max_depth,
-            self._mcts_config.confidence_value,
-            self._mcts_config.rave_param,
-            self._random_player,
-            self._tree,
-            self._evaluator,
-        )
 
-        self.winning_probability = winning_probability
-        if self.winning_probability is not None:
-            self._logger.debug(
-                f"Name=[{self._mcts_config.name}] found best action=[{best_action}] has estimated probability of winning [{round(self.winning_probability*100,2)}%]",  # noqa: E501
-            )
+        #Perform monte carlo tree search
+        self._mcts_engine.perform_search(self._mcts_config.max_count)
 
-        if self._mcts_config.randomize_action:
-            action_probabilities = tree.get_action_probabilities(self._game, temperature=1)
-            action = np.random.choice(self._game.get_number_of_actions(), p=action_probabilities)
-            return action
-        else:
+        if not self._mcts_config.randomize_action:
+            #Get best action and winning probability
+            best_action, winning_probability = self._mcts_engine.get_best_root_action()
+
+            self.winning_probability = winning_probability
+            if self.winning_probability is not None:
+                self._logger.debug(
+                    f"Name=[{self._mcts_config.name}] found best action=[{best_action}] has estimated probability of winning [{round(self.winning_probability*100,2)}%]",  # noqa: E501
+                )
+
             return best_action
+
+        else:
+            action_probabilities = self._tree.get_action_probabilities(self._game, temperature=1)
+            action = np.random.choice(self._game.get_number_of_actions(), p=action_probabilities)  # noqa: NPY002
+            return action
 
     def reset(self: "MCTSPlayer") -> None:
         self._evaluator = standard_evaluator
         self.winning_probability = None
         self._get_new_tree()
+        self._get_new_mcts_engine()
 
     def get_name(self: "MCTSPlayer") -> str:
         return self._name
 
     def _get_new_tree(self: "MCTSPlayer") -> None:
-        self._tree = MonteCarloTreeSearch.Tree()
+        self._tree = Tree()
+        if hasattr(self, "_mcts_engine"):
+            self._mcts_engine.set_tree(self._tree)
+
+    def _get_new_mcts_engine(self: "MCTSPlayer") -> None:
+        self._mcts_engine = MonteCarloTreeSearchEngine(
+            self._game,
+            self._player,
+            self._mcts_config,
+            self._rollout_player,
+            self._tree,
+            self._evaluator,
+        )
+
 
 @numba.njit
 def make_random_choice(available_actions: list[int]) -> int:
     return np.random.choice(available_actions)  # noqa: NPY002
 
+
 def standard_evaluator(game: Connect4) -> Tuple[npt.NDArray[np.float64], float]:
     number_of_actions = game.get_number_of_actions()
     return standard_evaluator_numba(number_of_actions)
+
 
 @numba.njit
 def standard_evaluator_numba(number_of_actions: int) -> Tuple[npt.NDArray[np.float64], float]:

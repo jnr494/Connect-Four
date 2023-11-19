@@ -5,44 +5,61 @@ import numpy as np
 import numpy.typing as npt
 
 import Connect4Game
+from ConfigHandler import MCTSPlayerConfig
 from IPlayer import IPlayer
 from Tree import Tree
 
 
-def MonteCarloTreeSearch(
-    game: Connect4Game.Connect4,
-    player: int,
-    max_count: int,
-    max_depth: int,
-    confidence_value: float,
-    rave_param: Optional[float],
-    rollout_player: IPlayer,
-    tree: Tree,
-    evaluator: Callable,
-    rollout_weight: float = 1,
-):
-    use_rave = rave_param is not None
+class MonteCarloTreeSearchEngine:
+    _game: Connect4Game.Connect4
+    _player: int
+    _config: MCTSPlayerConfig
+    _rollout_player: IPlayer
+    _tree: Tree
+    _evaluator: Callable
+    _use_rave: bool
 
-    for _ in range(max_count):
-        mcts_single_simulation(
-            game,
-            tree,
-            confidence_value,
-            rave_param,
-            use_rave,
-            max_depth,
-            player,
-            evaluator,
-            rollout_weight,
-            rollout_player,
-        )
+    def __init__(
+        self: "MonteCarloTreeSearchEngine",
+        game: Connect4Game.Connect4,
+        player: int,
+        config: MCTSPlayerConfig,
+        rollout_player: IPlayer,
+        tree: Tree,
+        evaluator: Callable,
+    ) -> None:
+        self._game = game
+        self._player = player
+        self._config = config
+        self._rollout_player = rollout_player
+        self._tree = tree
+        self._evaluator = evaluator
 
-    # find best action
-    start_node = tree.get_node(game.get_state_hash())
-    best_root_action = select_node_action_ucb1(start_node, 0, None)
-    winning_probability = start_node["q_values"][start_node["actions_idx"][best_root_action]]
-    return best_root_action, tree, winning_probability
+        self._use_rave = self._config.rave_param is not None
 
+    def set_tree(self: "MonteCarloTreeSearchEngine", tree: Tree) -> None:
+        self._tree = tree
+
+    def perform_search(self: "MonteCarloTreeSearchEngine", number_of_rounds: int) -> None:
+        for _ in range(number_of_rounds):
+            mcts_single_simulation(
+                self._game,
+                self._tree,
+                self._config.confidence_value,
+                self._config.rave_param,
+                self._use_rave,
+                self._config.max_depth,
+                self._player,
+                self._evaluator,
+                self._config.rollout_weight,
+                self._rollout_player,
+            )
+
+    def get_best_root_action(self: "MonteCarloTreeSearchEngine") -> Tuple[int, float]:
+        start_node = self._tree.get_node(self._game.get_state_hash())
+        best_root_action = select_node_action_ucb1(start_node, 0, None)
+        winning_probability = start_node["q_values"][start_node["actions_idx"][best_root_action]]
+        return best_root_action, winning_probability
 
 def mcts_single_simulation(
         game: Connect4Game.Connect4,

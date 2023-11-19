@@ -16,6 +16,7 @@ class ConfigHandlerTests(unittest.TestCase):
             self.assertIsInstance(mctsplayer.rave_param, (float, type(None)))
             self.assertIsInstance(mctsplayer.reuse_tree, bool)
             self.assertIsInstance(mctsplayer.randomize_action, bool)
+            self.assertIsInstance(mctsplayer.rollout_weight, float)
 
     def test_increase_difficulty(self: "ConfigHandlerTests") -> None:
         config_handler = ConfigHandler.ConfigHandler()
