@@ -120,6 +120,7 @@ class Connect4GameTests(unittest.TestCase):
         self.assertTrue(np.array_equal(game._get_board(), np.zeros((game._no_rows, game._no_cols))), True)
         self.assertTrue(np.array_equal(game.next_row_height, np.zeros((game._no_cols,), dtype=int)), True)
         self.assertEqual(game_turn_handler.get_current_player_value(), 1)
+        self.assertEqual(game.get_round(), 0)
 
     def test_last_player(self: "Connect4GameTests") -> None:
         game_turn_handler = GameTurnHandler([1, -1])
@@ -140,3 +141,74 @@ class Connect4GameTests(unittest.TestCase):
         game.next_turn()
 
         self.assertEqual(game.get_last_player(), -1)
+
+    def test_get_round(self: "Connect4GameTests") -> None:
+        game_turn_handler = GameTurnHandler([1, -1])
+        game = Connect4(game_turn_handler=game_turn_handler)
+
+        self.assertEqual(game.get_round(), 0)
+
+        game.place_disc(3)
+        game.next_turn()
+
+        self.assertEqual(game.get_round(), 1)
+
+        game.place_disc(3)
+        game.next_turn()
+
+        self.assertEqual(game.get_round(), 2)
+
+    def test_is_draw(self: "Connect4GameTests") -> None:
+        game_turn_handler = GameTurnHandler([1, -1])
+        game = Connect4(game_turn_handler=game_turn_handler)
+
+        self.assertFalse(game.is_draw())
+
+        #First column
+        for _ in range(6):
+            game.place_disc(0)
+            game.next_turn()
+            self.assertFalse(game.is_draw())
+
+        #Second column
+        for _ in range(6):
+            game.place_disc(1)
+            game.next_turn()
+            self.assertFalse(game.is_draw())
+
+        #Third column
+        for _ in range(6):
+            game.place_disc(2)
+            game.next_turn()
+            self.assertFalse(game.is_draw())
+
+        #First player plays column 6 to avoid winning
+        game.place_disc(6)
+        game.next_turn()
+        self.assertFalse(game.is_draw())
+
+        #Fourth column
+        for _ in range(6):
+            game.place_disc(3)
+            game.next_turn()
+            self.assertFalse(game.is_draw())
+
+        #Fifth column
+        for _ in range(6):
+            game.place_disc(4)
+            game.next_turn()
+            self.assertFalse(game.is_draw())
+
+        #Sixth column
+        for _ in range(6):
+            game.place_disc(5)
+            game.next_turn()
+            self.assertFalse(game.is_draw())
+
+        #Last column
+        for _ in range(5):
+            self.assertFalse(game.is_draw())
+            game.place_disc(6)
+            game.next_turn()
+
+        self.assertTrue(game.is_draw())

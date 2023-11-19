@@ -15,6 +15,7 @@ class Connect4:
     _board: npt.NDArray[np.float64]
     next_row_height: npt.NDArray[np.float64]
     _last_player: int | None
+    _round: int
 
     def __init__(
         self: "Connect4",
@@ -48,6 +49,8 @@ class Connect4:
         self.next_row_height[col] += 1
         #update last_player
         self._last_player = player
+        #update round
+        self._round += 1
 
         # check for win
         if self._winner is not None:
@@ -71,6 +74,12 @@ class Connect4:
 
     def get_winner(self: "Connect4") -> int | None:
         return self._winner
+
+    def get_round(self: "Connect4") -> int:
+        return self._round
+
+    def is_draw(self: "Connect4") -> int:
+        return self.get_round() == self.get_max_rounds()
 
     def _get_board(self: "Connect4") -> npt.NDArray[np.float64]:
         return self._board
@@ -97,6 +106,7 @@ class Connect4:
             }
             self._winner = None
             self._last_player = None
+            self._round = 0
             if hasattr(self, "_game_turn_handler"):
                 self._game_turn_handler.reset()
         else:
@@ -105,6 +115,7 @@ class Connect4:
             self._current_winning_possibilities = copy.deepcopy(game._current_winning_possibilities)
             self._winner = game._winner
             self._last_player = game._last_player
+            self._round = game.get_round()
             self._game_turn_handler = game.get_turn_handler().copy()
 
     def get_turn_handler(self: "Connect4") -> GameTurnHandler:
