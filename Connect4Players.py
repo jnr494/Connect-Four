@@ -1,7 +1,7 @@
 import logging
 from typing import Tuple
 
-import numba
+import numba  # type : ignore
 import numpy as np
 import numpy.typing as npt
 

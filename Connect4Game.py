@@ -2,7 +2,7 @@ import copy
 from typing import Optional
 
 import matplotlib.pyplot as plt
-import numba
+import numba  # type: ignore
 import numpy as np
 import numpy.typing as npt
 
@@ -190,7 +190,7 @@ class Connect4:
             self.ax = self.fig.add_subplot(111)
             self.scatter = self.ax.scatter(x + 0.5, y + 0.5, s=r, c=colors)
             self.ax.set_facecolor("blue")
-            plt.xticks(ticks=np.arange(7) + 0.5, labels=np.arange(1, self._no_cols + 1))
+            plt.xticks(ticks=np.arange(7) + 0.5, labels=list(map(str,np.arange(1, self._no_cols + 1))))
             self.ax.get_yaxis().set_visible(False)
             plt.xlim([0, no_cols])
             plt.ylim([0, no_rows])

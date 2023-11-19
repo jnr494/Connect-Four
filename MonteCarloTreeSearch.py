@@ -1,6 +1,6 @@
 from typing import Callable, Optional, Tuple
 
-import numba
+import numba  # type: ignore
 import numpy as np
 import numpy.typing as npt
 
