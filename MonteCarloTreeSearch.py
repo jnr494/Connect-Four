@@ -45,16 +45,16 @@ def MonteCarloTreeSearch(
 
 
 def mcts_single_simulation(
-        game: Connect4Game.Connect4,
-        tree: Tree,
-        confidence_value: float,
-        rave_param: float | None,
-        use_rave: bool,
-        max_depth: int,
-        player: int,
-        evaluator: Callable,
-        rollout_weight: float,
-        rollout_player: IPlayer,
+    game: Connect4Game.Connect4,
+    tree: Tree,
+    confidence_value: float,
+    rave_param: float | None,
+    use_rave: bool,
+    max_depth: int,
+    player: int,
+    evaluator: Callable,
+    rollout_weight: float,
+    rollout_player: IPlayer,
 ) -> None:
     # Reset game and variables for new round
     game_copy = game.copy()
@@ -100,19 +100,19 @@ def mcts_single_simulation(
         use_rave,
     )
 
-def mcts_selection(
-        game: Connect4Game.Connect4,
-        tree: Tree,
-        confidence_value: float,
-        rave_param: float | None,
-        max_depth: int,
-        player: int,
-        evaluator: Callable,
-        actions: list[int],
-        new_row_heights: list[int],
-        visited_state_hashes: list[int],
-    ) -> Tuple[bool, float, dict]:
 
+def mcts_selection(
+    game: Connect4Game.Connect4,
+    tree: Tree,
+    confidence_value: float,
+    rave_param: float | None,
+    max_depth: int,
+    player: int,
+    evaluator: Callable,
+    actions: list[int],
+    new_row_heights: list[int],
+    visited_state_hashes: list[int],
+) -> Tuple[bool, float, dict]:
     terminal_bool, last_player_reward = check_game_over(game)
 
     while (not terminal_bool) and len(visited_state_hashes) <= max_depth:
@@ -142,6 +142,7 @@ def mcts_selection(
         )
 
     return terminal_bool, last_player_reward, current_node
+
 
 def mcts_expansion(
     game: Connect4Game.Connect4,
@@ -262,6 +263,7 @@ def mcts_backpropagation(
             following_row_heights=np.array(new_row_heights[idx + 2 :: 2]),
             use_rave=use_rave,
         )
+
 
 def check_game_over(game: Connect4Game.Connect4) -> Tuple[bool, float]:
     reward: float
