@@ -10,6 +10,29 @@ from IPlayer import IPlayer
 from Tree import Tree
 
 
+class MctsSimulationState:
+    game: Connect4Game.Connect4
+    visited_state_hashes: list[int]
+    actions: list[int]
+    new_row_heights: list[int]
+    terminal_bool: bool
+    current_node: dict
+    last_player_reward: float
+
+    def __init__(self: "MctsSimulationState", game: Connect4Game.Connect4) -> None:
+        self.game = game.copy()
+
+    def reset(self: "MctsSimulationState", game: Connect4Game.Connect4) -> None:
+        self.game.reset(game)
+
+        self.visited_state_hashes = []
+        self.actions = []
+        self.new_row_heights = []
+        self.terminal_bool = False
+        self.current_node = {}
+        self.last_player_reward = 0
+
+
 class MonteCarloTreeSearchEngine:
     _game: Connect4Game.Connect4
     _player: int
@@ -18,6 +41,7 @@ class MonteCarloTreeSearchEngine:
     _tree: Tree
     _evaluator: Callable
     _use_rave: bool
+    _simulation_state: MctsSimulationState
 
     def __init__(
         self: "MonteCarloTreeSearchEngine",
@@ -37,12 +61,27 @@ class MonteCarloTreeSearchEngine:
 
         self._use_rave = self._config.rave_param is not None
 
+        self._simulation_state = MctsSimulationState(self._game)
+
     def set_tree(self: "MonteCarloTreeSearchEngine", tree: Tree) -> None:
         self._tree = tree
 
     def perform_search(self: "MonteCarloTreeSearchEngine", number_of_rounds: int) -> None:
         for _ in range(number_of_rounds):
+            self._simulation_state.reset(self._game)
             self._perform_single_simulation()
+            # mcts_single_simulation(
+            #     self._simulation_state.game,
+            #     self._tree,
+            #     self._config.confidence_value,
+            #     self._config.rave_param,
+            #     self._use_rave,
+            #     self._config.max_depth,
+            #     self._player,
+            #     self._evaluator,
+            #     self._config.rollout_weight,
+            #     self._rollout_player,
+            # )
 
     def get_best_root_action(self: "MonteCarloTreeSearchEngine") -> Tuple[int, float]:
         start_node = self._tree.get_node(self._game.get_state_hash())
@@ -51,85 +90,103 @@ class MonteCarloTreeSearchEngine:
         return best_root_action, winning_probability
 
     def _perform_single_simulation(self: "MonteCarloTreeSearchEngine") -> None:
-        # Reset game and variables for new round
-        self._game_copy = self._game.copy()
-        self._visited_state_hashes: list[int] = []
-        self._actions: list[int] = []
-        self._new_row_heights: list[int] = []
-        self._terminal_bool: bool
-        self._current_node: dict
-        self._last_player_reward: float
-
         ##selection
-        self._selection()
+        # self._selection()
+        (
+            self._simulation_state.terminal_bool,
+            self._simulation_state.last_player_reward,
+            self._simulation_state.current_node,
+        ) = mcts_selection(
+            self._simulation_state.game,
+            self._tree,
+            self._config.confidence_value,
+            self._config.rave_param,
+            self._config.max_depth,
+            self._player,
+            self._evaluator,
+            self._simulation_state.actions,
+            self._simulation_state.new_row_heights,
+            self._simulation_state.visited_state_hashes,
+        )
 
         ##simulation
-        if not self._terminal_bool:
-            self._last_player_reward = mcts_simulation(
-                self._game_copy,
+        if not self._simulation_state.terminal_bool:
+            self._simulation_state.last_player_reward = mcts_simulation(
+                self._simulation_state.game,
                 self._config.rollout_weight,
                 self._rollout_player,
-                self._actions,
-                self._new_row_heights,
-                self._current_node,
+                self._simulation_state.actions,
+                self._simulation_state.new_row_heights,
+                self._simulation_state.current_node,
             )
 
         player_reward = (
-            self._last_player_reward
-            if (self._game_copy.get_last_player() == self._player)
-            else 1 - self._last_player_reward
+            self._simulation_state.last_player_reward
+            if (self._simulation_state.game.get_last_player() == self._player)
+            else 1 - self._simulation_state.last_player_reward
         )
 
         ##backpropagation
         mcts_backpropagation(
             self._tree,
             player_reward,
-            self._visited_state_hashes,
-            self._actions,
-            self._new_row_heights,
+            self._simulation_state.visited_state_hashes,
+            self._simulation_state.actions,
+            self._simulation_state.new_row_heights,
             self._use_rave,
         )
 
     def _selection(self: "MonteCarloTreeSearchEngine") -> None:
-        terminal_bool, last_player_reward = check_game_over(self._game_copy)
+        self._simulation_state.terminal_bool, self._simulation_state.last_player_reward = check_game_over(
+            self._simulation_state.game,
+        )
 
-        while (not terminal_bool) and len(self._visited_state_hashes) <= self._config.max_depth:
-            current_state_hash = self._game_copy.get_state_hash()
-            self._visited_state_hashes.append(current_state_hash)
-            no_visited_states = len(self._visited_state_hashes)
+        while (not self._simulation_state.terminal_bool) and (
+            len(
+                self._simulation_state.visited_state_hashes,
+            )
+            <= self._config.max_depth
+        ):
+            current_state_hash = self._simulation_state.game.get_state_hash()
+            self._simulation_state.visited_state_hashes.append(current_state_hash)
+            no_visited_states = len(self._simulation_state.visited_state_hashes)
 
             if no_visited_states > 1:
-                self._tree.update_next_state_hash(self._visited_state_hashes[-2], self._actions[-1], current_state_hash)
+                self._tree.update_next_state_hash(
+                    self._simulation_state.visited_state_hashes[-2],
+                    self._simulation_state.actions[-1],
+                    current_state_hash,
+                )
 
             ##expansion and stop selection
             if not self._tree.is_node_in_tree(current_state_hash):
                 self._expansion(current_state_hash)
                 break
 
-            self._current_node = self._tree.get_node(current_state_hash)
+            self._simulation_state.current_node = self._tree.get_node(current_state_hash)
 
             ##selection continued
-            terminal_bool, last_player_reward = mcts_selection_find_and_perform_action(
-                self._game_copy,
+            (
+                self._simulation_state.terminal_bool,
+                self._simulation_state.last_player_reward,
+            ) = mcts_selection_find_and_perform_action(
+                self._simulation_state.game,
                 self._config.confidence_value,
                 self._config.rave_param,
                 self._player,
-                self._current_node,
-                self._actions,
-                self._new_row_heights,
+                self._simulation_state.current_node,
+                self._simulation_state.actions,
+                self._simulation_state.new_row_heights,
             )
 
-        self._terminal_bool = terminal_bool
-        self._last_player_reward = last_player_reward
-
     def _expansion(self: "MonteCarloTreeSearchEngine", state_hash: int) -> None:
-        clever_available_actions = self._game_copy.get_clever_available_actions()
+        clever_available_actions = self._simulation_state.game.get_clever_available_actions()
         # find priors and win_prediction from evaluator
-        priors, win_prediction = self._evaluator(self._game_copy)
+        priors, win_prediction = self._evaluator(self._simulation_state.game)
         filtered_priors = priors[clever_available_actions]
         filtered_priors = filtered_priors / sum(filtered_priors)
 
-        next_row_heights = self._game_copy.next_row_height[clever_available_actions]
+        next_row_heights = self._simulation_state.game.next_row_height[clever_available_actions]
         self._tree.new_node(
             state_hash,
             clever_available_actions,
@@ -137,131 +194,131 @@ class MonteCarloTreeSearchEngine:
             filtered_priors,
             win_prediction,
         )
-        self._current_node = self._tree.get_node(state_hash)
+        self._simulation_state.current_node = self._tree.get_node(state_hash)
 
 
-# def mcts_single_simulation(
-#         game: Connect4Game.Connect4,
-#         tree: Tree,
-#         confidence_value: float,
-#         rave_param: float | None,
-#         use_rave: bool,
-#         max_depth: int,
-#         player: int,
-#         evaluator: Callable,
-#         rollout_weight: float,
-#         rollout_player: IPlayer,
-# ) -> None:
-#     # Reset game and variables for new round
-#     game_copy = game.copy()
-#     visited_state_hashes: list[int] = []
-#     actions: list[int] = []
-#     new_row_heights: list[int] = []
-#     terminal_bool = False
+def mcts_single_simulation(
+    game: Connect4Game.Connect4,
+    tree: Tree,
+    confidence_value: float,
+    rave_param: float | None,
+    use_rave: bool,
+    max_depth: int,
+    player: int,
+    evaluator: Callable,
+    rollout_weight: float,
+    rollout_player: IPlayer,
+) -> None:
+    # Reset game and variables for new round
+    game_copy = game.copy()
+    visited_state_hashes: list[int] = []
+    actions: list[int] = []
+    new_row_heights: list[int] = []
+    terminal_bool = False
 
-#     ##selection
-#     terminal_bool, last_player_reward, current_node = mcts_selection(
-#         game_copy,
-#         tree,
-#         confidence_value,
-#         rave_param,
-#         max_depth,
-#         player,
-#         evaluator,
-#         actions,
-#         new_row_heights,
-#         visited_state_hashes,
-#     )
+    ##selection
+    terminal_bool, last_player_reward, current_node = mcts_selection(
+        game_copy,
+        tree,
+        confidence_value,
+        rave_param,
+        max_depth,
+        player,
+        evaluator,
+        actions,
+        new_row_heights,
+        visited_state_hashes,
+    )
 
-#     ##simulation
-#     if not terminal_bool:
-#         last_player_reward = mcts_simulation(
-#             game_copy,
-#             rollout_weight,
-#             rollout_player,
-#             actions,
-#             new_row_heights,
-#             current_node,
-#         )
+    ##simulation
+    if not terminal_bool:
+        last_player_reward = mcts_simulation(
+            game_copy,
+            rollout_weight,
+            rollout_player,
+            actions,
+            new_row_heights,
+            current_node,
+        )
 
-#     player_reward = last_player_reward if (game_copy.get_last_player() == player) else 1 - last_player_reward
+    player_reward = last_player_reward if (game_copy.get_last_player() == player) else 1 - last_player_reward
 
-#     ##backpropagation
-#     mcts_backpropagation(
-#         tree,
-#         player_reward,
-#         visited_state_hashes,
-#         actions,
-#         new_row_heights,
-#         use_rave,
-#     )
-
-
-# def mcts_selection(
-#     game: Connect4Game.Connect4,
-#     tree: Tree,
-#     confidence_value: float,
-#     rave_param: float | None,
-#     max_depth: int,
-#     player: int,
-#     evaluator: Callable,
-#     actions: list[int],
-#     new_row_heights: list[int],
-#     visited_state_hashes: list[int],
-# ) -> Tuple[bool, float, dict]:
-#     terminal_bool, last_player_reward = check_game_over(game)
-
-#     while (not terminal_bool) and len(visited_state_hashes) <= max_depth:
-#         current_state_hash = game.get_state_hash()
-#         visited_state_hashes.append(current_state_hash)
-#         no_visited_states = len(visited_state_hashes)
-
-#         if no_visited_states > 1:
-#             tree.update_next_state_hash(visited_state_hashes[-2], actions[-1], current_state_hash)
-
-#         ##expansion and stop selection
-#         if not tree.is_node_in_tree(current_state_hash):
-#             current_node = mcts_expansion(game, tree, evaluator, current_state_hash)
-#             break
-#         else:
-#             current_node = tree.get_node(current_state_hash)
-
-#         ##selection continued
-#         terminal_bool, last_player_reward = mcts_selection_find_and_perform_action(
-#             game,
-#             confidence_value,
-#             rave_param,
-#             player,
-#             current_node,
-#             actions,
-#             new_row_heights,
-#         )
-
-#     return terminal_bool, last_player_reward, current_node
+    ##backpropagation
+    mcts_backpropagation(
+        tree,
+        player_reward,
+        visited_state_hashes,
+        actions,
+        new_row_heights,
+        use_rave,
+    )
 
 
-# def mcts_expansion(
-#     game: Connect4Game.Connect4,
-#     tree: Tree,
-#     evaluator: Callable,
-#     state_hash: int,
-# ) -> dict:
-#     clever_available_actions = game.get_clever_available_actions()
-#     # find priors and win_prediction from evaluator
-#     priors, win_prediction = evaluator(game)
-#     filtered_priors = priors[clever_available_actions]
-#     filtered_priors = filtered_priors / sum(filtered_priors)
+def mcts_selection(
+    game: Connect4Game.Connect4,
+    tree: Tree,
+    confidence_value: float,
+    rave_param: float | None,
+    max_depth: int,
+    player: int,
+    evaluator: Callable,
+    actions: list[int],
+    new_row_heights: list[int],
+    visited_state_hashes: list[int],
+) -> Tuple[bool, float, dict]:
+    terminal_bool, last_player_reward = check_game_over(game)
 
-#     next_row_heights = game.next_row_height[clever_available_actions]
-#     tree.new_node(
-#         state_hash,
-#         clever_available_actions,
-#         next_row_heights,
-#         filtered_priors,
-#         win_prediction,
-#     )
-#     current_node = tree.get_node(state_hash)
-#     return current_node
+    while (not terminal_bool) and len(visited_state_hashes) <= max_depth:
+        current_state_hash = game.get_state_hash()
+        visited_state_hashes.append(current_state_hash)
+        no_visited_states = len(visited_state_hashes)
+
+        if no_visited_states > 1:
+            tree.update_next_state_hash(visited_state_hashes[-2], actions[-1], current_state_hash)
+
+        ##expansion and stop selection
+        if not tree.is_node_in_tree(current_state_hash):
+            current_node = mcts_expansion(game, tree, evaluator, current_state_hash)
+            break
+        else:
+            current_node = tree.get_node(current_state_hash)
+
+        ##selection continued
+        terminal_bool, last_player_reward = mcts_selection_find_and_perform_action(
+            game,
+            confidence_value,
+            rave_param,
+            player,
+            current_node,
+            actions,
+            new_row_heights,
+        )
+
+    return terminal_bool, last_player_reward, current_node
+
+
+def mcts_expansion(
+    game: Connect4Game.Connect4,
+    tree: Tree,
+    evaluator: Callable,
+    state_hash: int,
+) -> dict:
+    clever_available_actions = game.get_clever_available_actions()
+    # find priors and win_prediction from evaluator
+    priors, win_prediction = evaluator(game)
+    filtered_priors = priors[clever_available_actions]
+    filtered_priors = filtered_priors / sum(filtered_priors)
+
+    next_row_heights = game.next_row_height[clever_available_actions]
+    tree.new_node(
+        state_hash,
+        clever_available_actions,
+        next_row_heights,
+        filtered_priors,
+        win_prediction,
+    )
+    current_node = tree.get_node(state_hash)
+    return current_node
 
 
 def mcts_selection_find_and_perform_action(

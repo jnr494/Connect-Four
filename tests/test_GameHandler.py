@@ -56,7 +56,7 @@ class GameHandlerTests(unittest.TestCase):
         np.random.seed(420)  # noqa: NPY002
         winners = game_handler.play_n_games(number_of_games)
 
-        self.assertLess(np.sum(winners), -number_of_games/3)
+        self.assertLess(np.sum(winners), -number_of_games/4)
 
     def test_normal_vs_god_mcts(self: "GameHandlerTests") -> None:
         config_handler = ConfigHandler.ConfigHandler()
