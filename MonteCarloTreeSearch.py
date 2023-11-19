@@ -103,7 +103,7 @@ class MonteCarloTreeSearchEngine:
 
             ##expansion and stop selection
             if not self._tree.is_node_in_tree(current_state_hash):
-                self._current_node = mcts_expansion(self._game_copy, self._tree, self._evaluator, current_state_hash)
+                self._expansion(current_state_hash)
                 break
 
             self._current_node = self._tree.get_node(current_state_hash)
@@ -121,6 +121,23 @@ class MonteCarloTreeSearchEngine:
 
         self._terminal_bool = terminal_bool
         self._last_player_reward = last_player_reward
+
+    def _expansion(self: "MonteCarloTreeSearchEngine", state_hash: int) -> None:
+        clever_available_actions = self._game_copy.get_clever_available_actions()
+        # find priors and win_prediction from evaluator
+        priors, win_prediction = self._evaluator(self._game_copy)
+        filtered_priors = priors[clever_available_actions]
+        filtered_priors = filtered_priors / sum(filtered_priors)
+
+        next_row_heights = self._game_copy.next_row_height[clever_available_actions]
+        self._tree.new_node(
+            state_hash,
+            clever_available_actions,
+            next_row_heights,
+            filtered_priors,
+            win_prediction,
+        )
+        self._current_node = self._tree.get_node(state_hash)
 
 
 # def mcts_single_simulation(
@@ -223,28 +240,28 @@ class MonteCarloTreeSearchEngine:
 #     return terminal_bool, last_player_reward, current_node
 
 
-def mcts_expansion(
-    game: Connect4Game.Connect4,
-    tree: Tree,
-    evaluator: Callable,
-    state_hash: int,
-) -> dict:
-    clever_available_actions = game.get_clever_available_actions()
-    # find priors and win_prediction from evaluator
-    priors, win_prediction = evaluator(game)
-    filtered_priors = priors[clever_available_actions]
-    filtered_priors = filtered_priors / sum(filtered_priors)
+# def mcts_expansion(
+#     game: Connect4Game.Connect4,
+#     tree: Tree,
+#     evaluator: Callable,
+#     state_hash: int,
+# ) -> dict:
+#     clever_available_actions = game.get_clever_available_actions()
+#     # find priors and win_prediction from evaluator
+#     priors, win_prediction = evaluator(game)
+#     filtered_priors = priors[clever_available_actions]
+#     filtered_priors = filtered_priors / sum(filtered_priors)
 
-    next_row_heights = game.next_row_height[clever_available_actions]
-    tree.new_node(
-        state_hash,
-        clever_available_actions,
-        next_row_heights,
-        filtered_priors,
-        win_prediction,
-    )
-    current_node = tree.get_node(state_hash)
-    return current_node
+#     next_row_heights = game.next_row_height[clever_available_actions]
+#     tree.new_node(
+#         state_hash,
+#         clever_available_actions,
+#         next_row_heights,
+#         filtered_priors,
+#         win_prediction,
+#     )
+#     current_node = tree.get_node(state_hash)
+#     return current_node
 
 
 def mcts_selection_find_and_perform_action(
