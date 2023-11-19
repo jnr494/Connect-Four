@@ -1,16 +1,16 @@
 import logging
 from typing import Tuple
 
-import numba  # type : ignore
+import numba  # type: ignore
 import numpy as np
 import numpy.typing as npt
 
-from MonteCarloTreeSearch import MonteCarloTreeSearchEngine
-from Tree import Tree
 from ConfigHandler import MCTSPlayerConfig
 from Connect4Game import Connect4
 from IPlayer import IPlayer
 from LoggerHandler import LoggerHandler
+from MonteCarloTreeSearch import MonteCarloTreeSearchEngine
+from Tree import Tree
 
 
 class RandomPlayer(IPlayer):

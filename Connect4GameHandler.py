@@ -12,7 +12,7 @@ class Connect4GameHandler:
     _logger: logging.Logger
     _config_handler: ConfigHandler.ConfigHandler
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self: "Connect4GameHandler",
         game: Connect4,
         player0: IPlayer,

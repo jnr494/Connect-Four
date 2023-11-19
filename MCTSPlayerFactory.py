@@ -6,7 +6,7 @@ from LoggerHandler import LoggerHandler
 
 class MCTSPlayerFactory:
     @staticmethod
-    def create_player(  # noqa: PLR0913
+    def create_player(
         game: Connect4,
         player: int,
         next_player: int,
